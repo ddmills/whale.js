@@ -44,3 +44,19 @@ var Ninja = Pirate.extend ({
 });
 
 var n = new Ninja ('black');
+
+var Bard = whale.Dispatcher.extend({
+  init: function () {
+    console.log ('hi im a bard yo');
+  },
+
+  sing: function() {
+    this.trigger('singing');
+  }
+});
+
+var b = new Bard();
+
+b.when('singing', function() {
+  console.log ('that bard is singing again...');
+});

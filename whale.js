@@ -28,7 +28,7 @@
    * John Resig http://ejohn.org/
    * MIT Licensed
    */
-  var fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
+  var fnTest = /xyz/.test (function(){xyz;}) ? /\b_super\b/ : /.*/;
   var INITIALIZING;
   var Class = whale.Class = function () {};
   Class.extend = function (prop) {
@@ -69,6 +69,13 @@
     return Class;
   }
 
+
+  var ID_COUNT = 0;
+  var genId = whale.genId = function (prefix) {
+    var id = ++ID_COUNT + '';
+    return prefix ? prefix + id : id;
+  }
+
   var registered = {};
 
   var get = whale.get = function (key) {
@@ -95,7 +102,7 @@
     }
 
     /* return a wrapper to the object with dependencies injected */
-    return obj.extend({
+    return obj.extend ({
       init: function () {
         this._super.apply (this, args.concat (Array.prototype.slice.call (arguments, 0)));
       }
@@ -123,6 +130,84 @@
     return obj;
   }
 
+
+  var Dispatcher = whale.Dispatcher = Class.extend ({
+    _events: [],
+    _dispatch: function (name, args) {
+      if (!this._events[name]) return this;
+      for (var i = 0; i < this._events[name].length; i++) {
+        var listener = this._events[name][i];
+        if (typeof listener.action === 'function') {
+          listener.action.call (listener.ctx);
+        } else {
+          var fn = listener.ctx[listener.action];
+          fn.call (listener.ctx);
+        }
+      }
+      return this;
+    },
+
+    init: function () {
+      this._id = genId ('disp-');
+    },
+
+    trigger: function () {
+      for (var i = 0; i < arguments.length; i++)
+        this._dispatch (arguments[i]);
+      return this;
+    },
+
+    when: function (evnt, action, ctx) {
+      var events = this._events[evnt] || (this._events[evnt] = []);
+      ctx = ctx || this;
+      events.push ({ action: action, ctx: ctx });
+      return this;
+    },
+
+    stop: function (evnt, action, ctx) {
+      var events, i;
+
+      if (!evnt && !action && !ctx) {
+        this._events = [];
+        return this;
+      }
+
+      evntKeys = evnt ? [evnt] : Object.keys(this._events);
+      for (i = 0; i < evntKeys.length; i++) {
+        var acts, remaining, e, k;
+
+        evnt = evntKeys[i];
+        acts = this._events[evnt];
+
+        if (!acts) continue;
+
+        if (!action && !ctx) {
+          delete this._events[evnt];
+          continue;
+        }
+
+        remaining = [];
+        for (k = 0; i < acts.length; k++) {
+          e = acts[k];
+          if (
+            action && action !== e.action &&
+            action !== e.action._action ||
+            ctx && ctx !== e.ctx
+          ) {
+            remaining.push (e);
+          }
+        }
+
+        if (remaining.length) {
+          this._events[evnt] = remaining;
+        } else {
+          delete this._events[evnt];
+        }
+      }
+      return this;
+    }
+
+  });
 
 
 }.call(this));
