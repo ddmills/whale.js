@@ -46,4 +46,23 @@ bard.sing();
 bard.sing();
 bard.sing();
 bard.sing();
+
 bard.sing();
+/*
+  OUTPUT
+
+  "the bard is singing..."
+  "Bob takes a drink as the bard starts to sing"
+  "the bard is singing..."
+  "Bob hums along while the bard continues to sing"
+  "the bard is singing..."
+  "Bob hums along while the bard continues to sing"
+  "the bard is singing..."
+  "Bob hums along while the bard continues to sing"
+  "the bard is singing..."
+  "Bob hums along while the bard continues to sing"
+  "Bob has had enough to drink and stops listening to the bard"
+  "the bard is singing..."
+  "the bard is singing..."
+
+*/

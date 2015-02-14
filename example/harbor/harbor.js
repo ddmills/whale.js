@@ -1,5 +1,5 @@
-// There is only once instance of Dock
-// Dock is a Service which other Classes can
+// There is only once instance of Harbor
+// Harbor is a Service which other Classes can
 // utilize
 var Harbor = whale.Service ('Harbor', [], {
   construct: function () {
@@ -20,10 +20,10 @@ var Harbor = whale.Service ('Harbor', [], {
 });
 
 // Boats require a Harbor
-// This boat uses Dock, which gets injected to the construct() function.
-// Since Dock is a Service, it will already be instantiated
+// This boat uses Harbor, which gets injected to the construct() function.
+// Since Harbor is a Service, it will already be instantiated
 var Boat = whale.Factory ('Boat', ['Harbor'], {
-  // construct recieves dock, the color will be provided by user
+  // construct recieves Harbor, the color will be provided by user
   construct: function (harbor, color) {
     this.color = color;
     harbor.dock (this);
