@@ -133,6 +133,11 @@
 
   var Dispatcher = whale.Dispatcher = Class.extend ({
     _events: [],
+
+    init: function () {
+      this._id = genId ('disp-');
+    },
+
     _dispatch: function (name, args) {
       if (!this._events[name]) return this;
       for (var i = 0; i < this._events[name].length; i++) {
@@ -145,10 +150,6 @@
         }
       }
       return this;
-    },
-
-    init: function () {
-      this._id = genId ('disp-');
     },
 
     trigger: function () {
@@ -187,7 +188,7 @@
         }
 
         remaining = [];
-        for (k = 0; i < acts.length; k++) {
+        for (k = 0; k < acts.length; k++) {
           e = acts[k];
           if (
             action && action !== e.action &&
@@ -209,5 +210,40 @@
 
   });
 
+  var Listener = whale.Listener = Class.extend ({
+    init: function () {
+      this._id = genId('listen-');
+      this._listening = {};
+    },
+    listen: function (dispatcher, evnt, action, ctx) {
+      ctx = ctx || this;
+      var id = dispatcher._id;
+      this._listening[id] = dispatcher;
+      dispatcher.when (evnt, action, ctx);
+      return this;
+    },
+    listenOnce: function (dispatcher, evnt, action, ctx) {
+      ctx = ctx || this;
+      var cb = function () {
+        this.stopListening (dispatcher, evnt, cb);
+        action.apply (this, arguments);
+      }
+      cb._action = action;
+      return this.listen (dispatcher, evnt, cb, ctx);
+    },
+    stopListening: function (dispatcher, evnt, action, ctx) {
+      var id, disp;
 
+      id = dispatcher._id;
+      ctx = ctx || this;
+
+      for (var id in this._listening) {
+        disp = this._listening[id];
+        disp.stop (evnt, action, ctx);
+      }
+
+      if (!Object.keys(this._listening[id]).length) delete this._listening[id];
+      return this;
+    }
+  });
 }.call(this));

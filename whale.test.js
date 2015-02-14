@@ -45,8 +45,9 @@ var Ninja = Pirate.extend ({
 
 var n = new Ninja ('black');
 
-var Bard = whale.Dispatcher.extend({
+var Bard = whale.Dispatcher.extend ({
   init: function () {
+    this._super ();
     console.log ('hi im a bard yo');
   },
 
@@ -55,8 +56,34 @@ var Bard = whale.Dispatcher.extend({
   }
 });
 
-var b = new Bard();
+var Traveller = whale.Listener.extend ({
+  init: function (name, bard) {
+    this._super ();
+    this.name = name;
+    this.bard = bard;
+    this.listenOnce (this.bard, 'singing', this.drink);
+  },
+
+  drink: function (a) {
+    console.log (a);
+    console.log (this.name + ' takes a drink as the bard starts to sing');
+    this.listen (this.bard, 'singing', this.hum);
+  },
+
+  hum: function () {
+    console.log (this.name + ' hums along while the bard continues to sing');
+  }
+
+});
+
+var b = new Bard;
+var a = new Traveller ('Jim', b);
 
 b.when('singing', function() {
   console.log ('that bard is singing again...');
 });
+
+b.sing();
+b.sing();
+b.sing();
+b.sing();
