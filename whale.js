@@ -138,15 +138,15 @@
       this._id = genId ('disp-');
     },
 
-    _dispatch: function (name, args) {
+    _dispatch: function (name) {
       if (!this._events[name]) return this;
       for (var i = 0; i < this._events[name].length; i++) {
         var listener = this._events[name][i];
         if (typeof listener.action === 'function') {
-          listener.action.call (listener.ctx);
+          listener.action.call (listener.ctx, this);
         } else {
           var fn = listener.ctx[listener.action];
-          fn.call (listener.ctx);
+          fn.call (listener.ctx, this);
         }
       }
       return this;
@@ -212,7 +212,7 @@
 
   var Listener = whale.Listener = Class.extend ({
     init: function () {
-      this._id = genId('listen-');
+      this._id = genId ('listen-');
       this._listening = {};
     },
     listen: function (dispatcher, evnt, action, ctx) {
@@ -242,7 +242,7 @@
         disp.stop (evnt, action, ctx);
       }
 
-      if (!Object.keys(this._listening[id]).length) delete this._listening[id];
+      if (!Object.keys (this._listening[id]).length) delete this._listening[id];
       return this;
     }
   });

@@ -60,30 +60,37 @@ var Traveller = whale.Listener.extend ({
   init: function (name, bard) {
     this._super ();
     this.name = name;
-    this.bard = bard;
-    this.listenOnce (this.bard, 'singing', this.drink);
+    this.drinks = 0;
+    this.listenOnce (bard, 'singing', this.drink);
   },
 
-  drink: function (a) {
-    console.log (a);
+  drink: function (bard) {
+    this.drinks++;
     console.log (this.name + ' takes a drink as the bard starts to sing');
-    this.listen (this.bard, 'singing', this.hum);
+    this.listen (bard, 'singing', this.hum);
   },
 
-  hum: function () {
+  hum: function (bard) {
+    this.drinks++;
     console.log (this.name + ' hums along while the bard continues to sing');
+    if (this.drinks > 4) {
+      console.log (this.name + ' has had enough to drink and stops listening to the bard');
+      this.stopListening(bard);
+    }
   }
-
 });
 
-var b = new Bard;
-var a = new Traveller ('Jim', b);
+var bard = new Bard;
+var a = new Traveller ('Jim', bard);
 
-b.when('singing', function() {
-  console.log ('that bard is singing again...');
+bard.when('singing', function() {
+  console.log ('the bard is singing...');
 });
 
-b.sing();
-b.sing();
-b.sing();
-b.sing();
+bard.sing();
+bard.sing();
+bard.sing();
+bard.sing();
+bard.sing();
+bard.sing();
+bard.sing();
