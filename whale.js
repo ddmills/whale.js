@@ -24,13 +24,17 @@
     return this;
   }
 
-  /* Class inheritance by
-   * John Resig http://ejohn.org/
-   * MIT Licensed
+  /* Class inheritance idea from John Resig http://ejohn.org/
+   * modified to include initialize()
    */
   var fnTest = /xyz/.test (function(){xyz;}) ? /\b_super\b/ : /.*/;
   var INITIALIZING;
   var Class = whale.Class = function () {};
+  Class.prototype.initialize = function () {
+    /* all objects should have a unique id */
+    this._id = genId();
+  },
+
   Class.extend = function (prop) {
     var _super, prototype, name;
 
@@ -42,6 +46,7 @@
 
     for (name in prop) {
       prototype[name] =
+        name != 'initialize' &&
         typeof prop[name] == 'function' &&
         typeof _super[name] == 'function' &&
         fnTest.test (prop[name])
@@ -56,10 +61,19 @@
             };
           }) (name, prop[name])
         : prop[name];
+      if (name == 'initialize') {
+        prototype[name] = function () {
+          _super.initialize.apply (this);
+          prop.initialize.apply (this);
+        }
+      }
     }
 
     function Class() {
-      if (!INITIALIZING && this.init) this.init.apply (this, arguments);
+      if (!INITIALIZING) {
+         if (this.initialize) this.initialize.apply (this, arguments);
+         if (this.construct) this.construct.apply (this, arguments);
+       }
     }
 
     Class.prototype = prototype;
@@ -103,41 +117,30 @@
 
     /* return a wrapper to the object with dependencies injected */
     return obj.extend ({
-      init: function () {
+      construct: function () {
         this._super.apply (this, args.concat (Array.prototype.slice.call (arguments, 0)));
       }
     });
   }
 
   var Factory = whale.Factory = function (name, deps, proto) {
-    var obj = Class.extend (proto);
-
-    obj = inject (deps, obj);
-
-    if (name != null) {
-      return register (name, obj);
-    }
-
+    /* Factory injects and saves the class */
+    var obj = inject (deps, Class.extend (proto));
+    if (name != null) return register (name, obj);
     return obj;
   }
 
   var Service = whale.Service = function (name, deps, proto) {
-    var obj = Class.extend (proto);
-    obj = new (inject (deps, obj));
-    if (name != null) {
-      return register (name, obj);
-    }
+    /* Service gets instantiated right away */
+    var obj = new (inject (deps, Class.extend (proto)));
+    if (name != null) return register (name, obj);
     return obj;
   }
 
-
   var Dispatcher = whale.Dispatcher = Class.extend ({
-    _events: [],
-
-    init: function () {
-      this._id = genId ('disp-');
+    initialize: function () {
+      this._events = [];
     },
-
     _dispatch: function (name) {
       if (!this._events[name]) return this;
       for (var i = 0; i < this._events[name].length; i++) {
@@ -151,20 +154,17 @@
       }
       return this;
     },
-
     trigger: function () {
       for (var i = 0; i < arguments.length; i++)
         this._dispatch (arguments[i]);
       return this;
     },
-
     when: function (evnt, action, ctx) {
       var events = this._events[evnt] || (this._events[evnt] = []);
       ctx = ctx || this;
       events.push ({ action: action, ctx: ctx });
       return this;
     },
-
     stop: function (evnt, action, ctx) {
       var events, i;
 
@@ -211,8 +211,7 @@
   });
 
   var Listener = whale.Listener = Class.extend ({
-    init: function () {
-      this._id = genId ('listen-');
+    initialize: function () {
       this._listening = {};
     },
     listen: function (dispatcher, evnt, action, ctx) {
