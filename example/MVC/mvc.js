@@ -1,39 +1,63 @@
-whale.View ('buttonView', [], {
-  template: '<button type="button"> click me </button>',
+whale.View ('alertView', [], {
+  template: '<div class="alert"><span class="close">x</span><h4></h4><span class="message"></span></div>',
 
-  construct: function (selector) {
-    this.clicks = 0; // typically you don't want to save data in your view
-    this.container = $ (selector);
+  construct: function (data) {
+    this.data = data;
     this.element = $ (this.template);
-    this.element.click (this.triggerClick.bind (this));
+    this.element.find ('.message').html (data.message);
+    this.element.find ('h4').html (data.title);
+    this.element.addClass (data.type);
+    this.element.find ('.close').click (this.triggerClose.bind (this));
+  },
+
+  render: function (selector) {
+    this.container = $ (selector);
     this.container.append (this.element);
   },
 
-  triggerClick: function () {
-    this.clicks++;
-    this.trigger ('click');
+  close: function () {
+    this.element.slideUp(this.element.remove.bind(this));
+  },
+
+  triggerClose: function () {
+    this.trigger ('close');
   },
 
 });
 
 
-whale.Controller ('buttonController', ['buttonView'], {
+whale.Controller ('alertController', ['alertView'], {
 
-  construct: function (buttonView) {
-    this.views = [];
+  construct: function (alertView) {
+    this.views = {};
 
-    /* create five views */
+    var warningData = {
+      title: 'Warning!',
+      message: 'Don\'t drink the koolaid man. It\'s poisoned.',
+      type: 'warning'
+    }
+
+    var successData = {
+      title: 'Good Job!',
+      message: 'You didn\'t drink the koolaid dude nice.',
+      type: 'success'
+    }
+
+    // create five views
     for (var i = 0; i < 5; i++) {
-      var view = new buttonView ('#container');
-      this.listen (view, 'click', this.log);
-      this.views.push (view);
+      var data = i < 2 ? warningData : successData;
+      var view = new alertView (data);
+      view.render ('#container');
+      this.listenOnce (view, 'close', this.closeView);
+      this.views[view._id] = view;
     }
   },
 
-  log: function (e) {
-    console.log ('button ' + e._id + ' has been clicked ' + e.clicks + ' times');
+  closeView: function (e) {
+    e.close();
+    delete this.views[e._id];
   },
 });
 
 
-whale.make ('buttonController');
+whale.make ('alertController');

@@ -567,9 +567,10 @@ that extends whale.Dispatcher will have a variable called _events.</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>    _dispatch: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name)</span> </span>{
-      <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>._events[name]) <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
-      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">this</span>._events[name].length; i++) {
-        <span class="hljs-keyword">var</span> listener = <span class="hljs-keyword">this</span>._events[name][i];</pre></div></div>
+      <span class="hljs-keyword">var</span> evnts = <span class="hljs-keyword">this</span>._events[name];
+      <span class="hljs-keyword">if</span> (!evnts) <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; evnts.length; i++) {
+        <span class="hljs-keyword">var</span> listener = evnts[i];</pre></div></div>
             
         </li>
         
@@ -611,8 +612,9 @@ note that events are just strings</p>
             </div>
             
             <div class="content"><div class='highlight'><pre>    trigger: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
-      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">arguments</span>.length; i++)
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">arguments</span>.length; i++) {
         <span class="hljs-keyword">this</span>._dispatch (<span class="hljs-built_in">arguments</span>[i]);
+      }
       <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
     },</pre></div></div>
             
@@ -731,18 +733,7 @@ and use given context (ctx)</p>
     stopListening: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(dispatcher, evnt, action, ctx)</span> </span>{
       <span class="hljs-keyword">var</span> id, disp;
 
-      id = dispatcher._id;
-      ctx = ctx || <span class="hljs-keyword">this</span>;
-
-      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> id <span class="hljs-keyword">in</span> <span class="hljs-keyword">this</span>._listening) {
-        disp = <span class="hljs-keyword">this</span>._listening[id];
-        disp.stop (evnt, action, ctx);
-      }
-
-      <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">Object</span>.keys (<span class="hljs-keyword">this</span>._listening[id]).length) <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._listening[id];
-      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
-    }
-  });</pre></div></div>
+      ctx = ctx || <span class="hljs-keyword">this</span>;</pre></div></div>
             
         </li>
         
@@ -753,7 +744,86 @@ and use given context (ctx)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-35">&#182;</a>
               </div>
+              <p>if no arguments were provided, stop listening to everything</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span> (!dispatcher &amp;&amp; !evnt &amp;&amp; !action) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> id <span class="hljs-keyword">in</span> <span class="hljs-keyword">this</span>._listening) {
+          disp = <span class="hljs-keyword">this</span>._listening[id];
+          disp.stop (evnt, action, ctx);
+          <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">Object</span>.keys (<span class="hljs-keyword">this</span>._listening[id]).length) <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._listening[id];
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>we need a valid Dispatcher from here on out
+TODO: also allow dispatcher to be null, and remove all events with same name!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span> (! (dispatcher <span class="hljs-keyword">instanceof</span> Dispatcher)) {
+        <span class="hljs-keyword">throw</span> <span class="hljs-string">'First argument was not a valid Dispatcher object'</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>we only want to stop listening to this specific dispatcher</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      id = dispatcher._id;
+      disp = <span class="hljs-keyword">this</span>._listening[id];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>Dispatcher.stop will sort out if evnt, action, or ctx are null</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      disp.stop (evnt, action, ctx);
+      <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">Object</span>.keys (<span class="hljs-keyword">this</span>._listening[id]).length) <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._listening[id];
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    }
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
               <h3 id="view">View</h3>
+<p>View is just a factory that extends Dispatcher
+Views can only send out events, and not listen to anything. Note
+that doesn’t mean Views don’t listen to DOM events, Views should listen
+to DOM events, and pass those on to Controllers.</p>
 
             </div>
             
@@ -766,13 +836,16 @@ and use given context (ctx)</p>
         </li>
         
         
-        <li id="section-36">
+        <li id="section-40">
             <div class="annotation">
               
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-36">&#182;</a>
+                <a class="pilcrow" href="#section-40">&#182;</a>
               </div>
               <h3 id="controller">Controller</h3>
+<p>Controller is just a factory that extends Listener
+Controllers should be able to listen to events models and views
+to wire them together</p>
 
             </div>
             

@@ -191,9 +191,10 @@
 
     // dispatch will retrieve and send out callbacks for the given event
     _dispatch: function (name) {
-      if (!this._events[name]) return this;
-      for (var i = 0; i < this._events[name].length; i++) {
-        var listener = this._events[name][i];
+      var evnts = this._events[name];
+      if (!evnts) return this;
+      for (var i = 0; i < evnts.length; i++) {
+        var listener = evnts[i];
         // a listener callback can be a function, or a string
         // which represents a function name. Using this method, we can
         // invoke the function name string on the registered context
@@ -210,8 +211,9 @@
     // trigger can be called on a list of events to dispatch
     // note that events are just strings
     trigger: function () {
-      for (var i = 0; i < arguments.length; i++)
+      for (var i = 0; i < arguments.length; i++) {
         this._dispatch (arguments[i]);
+      }
       return this;
     },
 
@@ -294,20 +296,40 @@
     stopListening: function (dispatcher, evnt, action, ctx) {
       var id, disp;
 
-      id = dispatcher._id;
       ctx = ctx || this;
 
-      for (var id in this._listening) {
-        disp = this._listening[id];
-        disp.stop (evnt, action, ctx);
+      // if no arguments were provided, stop listening to everything
+      if (!dispatcher && !evnt && !action) {
+        for (var id in this._listening) {
+          disp = this._listening[id];
+          disp.stop (evnt, action, ctx);
+          if (!Object.keys (this._listening[id]).length) delete this._listening[id];
+        }
+        return this;
       }
 
+      // we need a valid Dispatcher from here on out
+      // TODO: also allow dispatcher to be null, and remove all events with same name!
+      if (! (dispatcher instanceof Dispatcher)) {
+        throw 'First argument was not a valid Dispatcher object';
+      }
+
+
+      // we only want to stop listening to this specific dispatcher
+      id = dispatcher._id;
+      disp = this._listening[id];
+      // Dispatcher.stop will sort out if evnt, action, or ctx are null
+      disp.stop (evnt, action, ctx);
       if (!Object.keys (this._listening[id]).length) delete this._listening[id];
       return this;
     }
   });
 
   // ### View
+  // View is just a factory that extends Dispatcher
+  // Views can only send out events, and not listen to anything. Note
+  // that doesn't mean Views don't listen to DOM events, Views should listen
+  // to DOM events, and pass those on to Controllers.
   var View = whale.View = function (name, deps, proto) {
     var obj = inject (deps, Dispatcher.extend (proto));
     if (name != null) return register (name, obj);
@@ -315,6 +337,9 @@
   }
 
   // ### Controller
+  // Controller is just a factory that extends Listener
+  // Controllers should be able to listen to events models and views
+  // to wire them together
   var Controller = whale.Controller = function (name, deps, proto) {
     var obj = inject (deps, Listener.extend (proto));
     if (name != null) return register (name, obj);
