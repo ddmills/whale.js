@@ -100,6 +100,37 @@
     return registered[key];
   }
 
+  var make = whale.make = function (key) {
+    var args, dep, tmp, inst;
+
+    /* extract the named dependency */
+    dep = get(key);
+
+    /* get rest of the arguments */
+    args = Array.prototype.slice.call (arguments, 1);
+
+    /* check if target is callable */
+    if (typeof dep === 'function') {
+      /* temporary constructor */
+      tmp = function () {};
+
+      /* give tmp constructor the same prototype as the target */
+      tmp.prototype = dep.prototype;
+
+      /* create an instance of tmp to get prototype */
+      inst = new tmp;
+
+      /* call target constructor from context of inst and send arguments */
+      ret = dep.apply (inst, args);
+
+      /* return if dep constructor returned object, else return inst */
+      return Object (ret) === ret ? ret : inst;
+    } else {
+      /* just return the dep instance since it's not callable */
+      return dep;
+    }
+  }
+
   var register = whale.register = function (key, value) {
     registered[key] = value;
     return registered[key];
@@ -118,7 +149,8 @@
     /* return a wrapper to the object with dependencies injected */
     return obj.extend ({
       construct: function () {
-        this._super.apply (this, args.concat (Array.prototype.slice.call (arguments, 0)));
+        if (this._super)
+          this._super.apply (this, args.concat (Array.prototype.slice.call (arguments, 0)));
       }
     });
   }
@@ -245,4 +277,17 @@
       return this;
     }
   });
+
+  var View = whale.View = function (name, deps, proto) {
+    var obj = inject (deps, Dispatcher.extend (proto));
+    if (name != null) return register (name, obj);
+    return obj;
+  }
+
+  var Controller = whale.Controller = function (name, deps, proto) {
+    var obj = inject (deps, Listener.extend (proto));
+    if (name != null) return register (name, obj);
+    return obj;
+  }
+
 }.call(this));
