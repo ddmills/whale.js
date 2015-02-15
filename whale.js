@@ -1,37 +1,36 @@
 (function () {
-  /* establish root object (typically window) */
+  // establish root object (typically window)
   var root = this;
 
-  /* save previous value of root.whale */
+  // save previous value of root.whale
   var previousWhale = root.whale;
 
-  /* safe reference to whale */
+  // safe reference to whale
   var whale = function (obj) {
     if (obj instanceof whale) return whale;
     if (! (this instanceof whale)) return new whale (obj);
     this._Wrapped = obj;
   };
 
-  /* should probably do checking for node and require */
+  // should probably do checking for node and require
   root.whale = whale;
 
-  /* current version of whale */
+  // current version of whale
   whale.VERSION = '0.0.1';
 
-  /* offer a no conflict option to remove from root */
+  // offer a no conflict option to remove from root
   whale.noConflict = function () {
     root.whale = previousWhale;
     return this;
   }
 
-  /* Class inheritance idea from John Resig http://ejohn.org/
-   * modified to include initialize()
-   */
+  // Class inheritance idea from John Resig http://ejohn.org/
+  // modified to include initialize()
   var fnTest = /xyz/.test (function(){xyz;}) ? /\b_super\b/ : /.*/;
   var INITIALIZING;
   var Class = whale.Class = function () {};
   Class.prototype.initialize = function () {
-    /* all objects should have a unique id */
+    // all objects should have a unique id
     this._id = genId();
   },
 
@@ -103,80 +102,101 @@
   var make = whale.make = function (key) {
     var args, dep, tmp, inst;
 
-    /* extract the named dependency */
+    // extract the named dependency
     dep = get(key);
 
-    /* get rest of the arguments */
+    // get rest of the arguments
     args = Array.prototype.slice.call (arguments, 1);
 
-    /* check if target is callable */
+    // check if target is callable
     if (typeof dep === 'function') {
-      /* temporary constructor */
+      // temporary constructor
       tmp = function () {};
 
-      /* give tmp constructor the same prototype as the target */
+      // give tmp constructor the same prototype as the target
       tmp.prototype = dep.prototype;
 
-      /* create an instance of tmp to get prototype */
+      // create an instance of tmp to get prototype
       inst = new tmp;
 
-      /* call target constructor from context of inst and send arguments */
+      // call target constructor from context of inst and send arguments
       ret = dep.apply (inst, args);
 
-      /* return if dep constructor returned object, else return inst */
+      // return if dep constructor returned object, else return inst
       return Object (ret) === ret ? ret : inst;
     } else {
-      /* just return the dep instance since it's not callable */
+      // just return the dep instance since it's not callable
       return dep;
     }
   }
 
+  // Register an object with whale
   var register = whale.register = function (key, value) {
     registered[key] = value;
     return registered[key];
   }
 
+  // Inject array of dependencies into object
   var inject = whale.inject = function (deps, obj) {
     var args, i;
 
     args = [];
 
-    /* retrieve all dependencies */
+    // retrieve all dependencies
     for (i = 0; i < deps.length; i++) {
       args.push (whale.get (deps[i]));
     }
 
-    /* return a wrapper to the object with dependencies injected */
+    // return a wrapper to the object with dependencies injected
     return obj.extend ({
       construct: function () {
+        // call super constructor if it exists
         if (this._super)
           this._super.apply (this, args.concat (Array.prototype.slice.call (arguments, 0)));
       }
     });
   }
 
+  // Factory creates a new class based on proto.
+  // It will build the class and insert the array of dependencies
+  // into the constructor.
+  // Factory will also register the resulting object as "name" if given.
+  // Leave name null if you don't want the object to be registered.
   var Factory = whale.Factory = function (name, deps, proto) {
-    /* Factory injects and saves the class */
     var obj = inject (deps, Class.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
   }
 
+  // Similiar to Factory, Service will make a new object based on proto
+  // with the array of given dependencies. Service will create a single
+  // instance of the new class and register that instance as given name
   var Service = whale.Service = function (name, deps, proto) {
-    /* Service gets instantiated right away */
     var obj = new (inject (deps, Class.extend (proto)));
     if (name != null) return register (name, obj);
     return obj;
   }
-
+  // ### Dispatcher Class
+  // The Dispatcher class can trigger events
   var Dispatcher = whale.Dispatcher = Class.extend ({
+    // initialize is similiar to the construct method, exept it doesn't
+    // need to be called with _super(). It will always run before the
+    // construct method. Using initialize will gaurantee that the class
+    // will always have certain fresh properties. In this case, anything
+    // that extends whale.Dispatcher will have a variable called _events.
     initialize: function () {
+      // events holds a list of listeners grouped by event
       this._events = [];
     },
+
+    // dispatch will retrieve and send out callbacks for the given event
     _dispatch: function (name) {
       if (!this._events[name]) return this;
       for (var i = 0; i < this._events[name].length; i++) {
         var listener = this._events[name][i];
+        // a listener callback can be a function, or a string
+        // which represents a function name. Using this method, we can
+        // invoke the function name string on the registered context
         if (typeof listener.action === 'function') {
           listener.action.call (listener.ctx, this);
         } else {
@@ -186,17 +206,25 @@
       }
       return this;
     },
+
+    // trigger can be called on a list of events to dispatch
+    // note that events are just strings
     trigger: function () {
       for (var i = 0; i < arguments.length; i++)
         this._dispatch (arguments[i]);
       return this;
     },
+
+    // register a callback (action) for given event (evnt)
+    // and use given context (ctx)
     when: function (evnt, action, ctx) {
       var events = this._events[evnt] || (this._events[evnt] = []);
-      ctx = ctx || this;
+      ctx = ctx || this; // default context is the current object
       events.push ({ action: action, ctx: ctx });
       return this;
     },
+
+    // Stop listening to an event
     stop: function (evnt, action, ctx) {
       var events, i;
 
@@ -242,6 +270,7 @@
 
   });
 
+  // ### Listener
   var Listener = whale.Listener = Class.extend ({
     initialize: function () {
       this._listening = {};
@@ -278,12 +307,14 @@
     }
   });
 
+  // ### View
   var View = whale.View = function (name, deps, proto) {
     var obj = inject (deps, Dispatcher.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
   }
 
+  // ### Controller
   var Controller = whale.Controller = function (name, deps, proto) {
     var obj = inject (deps, Listener.extend (proto));
     if (name != null) return register (name, obj);

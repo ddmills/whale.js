@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>whale.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>whale.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>establish root object (typically window)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> root = <span class="hljs-keyword">this</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>save previous value of root.whale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> previousWhale = root.whale;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>safe reference to whale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> whale = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(obj)</span> </span>{
+    <span class="hljs-keyword">if</span> (obj <span class="hljs-keyword">instanceof</span> whale) <span class="hljs-keyword">return</span> whale;
+    <span class="hljs-keyword">if</span> (! (<span class="hljs-keyword">this</span> <span class="hljs-keyword">instanceof</span> whale)) <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> whale (obj);
+    <span class="hljs-keyword">this</span>._Wrapped = obj;
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>should probably do checking for node and require</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  root.whale = whale;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>current version of whale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  whale.VERSION = <span class="hljs-string">'0.0.1'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>offer a no conflict option to remove from root</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  whale.noConflict = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+    root.whale = previousWhale;
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Class inheritance idea from John Resig <a href="http://ejohn.org/">http://ejohn.org/</a>
+modified to include initialize()</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> fnTest = <span class="hljs-regexp">/xyz/</span>.test (<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{xyz;}) ? <span class="hljs-regexp">/\b_super\b/</span> : <span class="hljs-regexp">/.*/</span>;
+  <span class="hljs-keyword">var</span> INITIALIZING;
+  <span class="hljs-keyword">var</span> Class = whale.Class = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{};
+  Class.prototype.initialize = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>all objects should have a unique id</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._id = genId();
+  },
+
+  Class.extend = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(prop)</span> </span>{
+    <span class="hljs-keyword">var</span> _super, prototype, name;
+
+    _super = <span class="hljs-keyword">this</span>.prototype;
+
+    INITIALIZING = <span class="hljs-literal">true</span>;
+    prototype = <span class="hljs-keyword">new</span> <span class="hljs-keyword">this</span>;
+    INITIALIZING = <span class="hljs-literal">false</span>;
+
+    <span class="hljs-keyword">for</span> (name <span class="hljs-keyword">in</span> prop) {
+      prototype[name] =
+        name != <span class="hljs-string">'initialize'</span> &amp;&amp;
+        <span class="hljs-keyword">typeof</span> prop[name] == <span class="hljs-string">'function'</span> &amp;&amp;
+        <span class="hljs-keyword">typeof</span> _super[name] == <span class="hljs-string">'function'</span> &amp;&amp;
+        fnTest.test (prop[name])
+        ? (<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name, fn)</span> </span>{
+            <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+              <span class="hljs-keyword">var</span> tmp, ret;
+              tmp = <span class="hljs-keyword">this</span>._super;
+              <span class="hljs-keyword">this</span>._super = _super[name];
+              ret = fn.apply (<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>);
+              <span class="hljs-keyword">this</span>._super = tmp;
+              <span class="hljs-keyword">return</span> ret;
+            };
+          }) (name, prop[name])
+        : prop[name];
+      <span class="hljs-keyword">if</span> (name == <span class="hljs-string">'initialize'</span>) {
+        prototype[name] = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+          _super.initialize.apply (<span class="hljs-keyword">this</span>);
+          prop.initialize.apply (<span class="hljs-keyword">this</span>);
+        }
+      }
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Class</span><span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">if</span> (!INITIALIZING) {
+         <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.initialize) <span class="hljs-keyword">this</span>.initialize.apply (<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>);
+         <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.construct) <span class="hljs-keyword">this</span>.construct.apply (<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>);
+       }
+    }
+
+    Class.prototype = prototype;
+    Class.prototype.constructor = Class;
+    Class.extend = <span class="hljs-built_in">arguments</span>.callee;
+
+    <span class="hljs-keyword">return</span> Class;
+  }
+
+
+  <span class="hljs-keyword">var</span> ID_COUNT = <span class="hljs-number">0</span>;
+  <span class="hljs-keyword">var</span> genId = whale.genId = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(prefix)</span> </span>{
+    <span class="hljs-keyword">var</span> id = ++ID_COUNT + <span class="hljs-string">''</span>;
+    <span class="hljs-keyword">return</span> prefix ? prefix + id : id;
+  }
+
+  <span class="hljs-keyword">var</span> registered = {};
+
+  <span class="hljs-keyword">var</span> get = whale.get = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(key)</span> </span>{
+    <span class="hljs-keyword">if</span> (!registered[key]) {
+      <span class="hljs-keyword">throw</span> <span class="hljs-string">'whale inject cannot resolve given dependency "'</span> + key + <span class="hljs-string">'"... '</span> +
+            <span class="hljs-string">'could not find it in list registered dependencies'</span>;
+    }
+    <span class="hljs-keyword">return</span> registered[key];
+  }
+
+  <span class="hljs-keyword">var</span> make = whale.make = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(key)</span> </span>{
+    <span class="hljs-keyword">var</span> args, dep, tmp, inst;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>extract the named dependency</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    dep = get(key);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>get rest of the arguments</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    args = <span class="hljs-built_in">Array</span>.prototype.slice.call (<span class="hljs-built_in">arguments</span>, <span class="hljs-number">1</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>check if target is callable</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> dep === <span class="hljs-string">'function'</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>temporary constructor</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      tmp = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>give tmp constructor the same prototype as the target</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      tmp.prototype = dep.prototype;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>create an instance of tmp to get prototype</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      inst = <span class="hljs-keyword">new</span> tmp;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>call target constructor from context of inst and send arguments</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      ret = dep.apply (inst, args);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>return if dep constructor returned object, else return inst</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span> (ret) === ret ? ret : inst;
+    } <span class="hljs-keyword">else</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>just return the dep instance since it’s not callable</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> dep;
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>Register an object with whale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> register = whale.register = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(key, value)</span> </span>{
+    registered[key] = value;
+    <span class="hljs-keyword">return</span> registered[key];
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Inject array of dependencies into object</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> inject = whale.inject = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(deps, obj)</span> </span>{
+    <span class="hljs-keyword">var</span> args, i;
+
+    args = [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>retrieve all dependencies</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; deps.length; i++) {
+      args.push (whale.get (deps[i]));
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>return a wrapper to the object with dependencies injected</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">return</span> obj.extend ({
+      construct: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>call super constructor if it exists</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>._super)
+          <span class="hljs-keyword">this</span>._super.apply (<span class="hljs-keyword">this</span>, args.concat (<span class="hljs-built_in">Array</span>.prototype.slice.call (<span class="hljs-built_in">arguments</span>, <span class="hljs-number">0</span>)));
+      }
+    });
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Factory creates a new class based on proto.
+It will build the class and insert the array of dependencies
+into the constructor.
+Factory will also register the resulting object as “name” if given.
+Leave name null if you don’t want the object to be registered.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> Factory = whale.Factory = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name, deps, proto)</span> </span>{
+    <span class="hljs-keyword">var</span> obj = inject (deps, Class.extend (proto));
+    <span class="hljs-keyword">if</span> (name != <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span> register (name, obj);
+    <span class="hljs-keyword">return</span> obj;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>Similiar to Factory, Service will make a new object based on proto
+with the array of given dependencies. Service will create a single
+instance of the new class and register that instance as given name</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> Service = whale.Service = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name, deps, proto)</span> </span>{
+    <span class="hljs-keyword">var</span> obj = <span class="hljs-keyword">new</span> (inject (deps, Class.extend (proto)));
+    <span class="hljs-keyword">if</span> (name != <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span> register (name, obj);
+    <span class="hljs-keyword">return</span> obj;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <h3 id="dispatcher-class">Dispatcher Class</h3>
+<p>The Dispatcher class can trigger events</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> Dispatcher = whale.Dispatcher = Class.extend ({</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>initialize is similiar to the construct method, exept it doesn’t
+need to be called with _super(). It will always run before the
+construct method. Using initialize will gaurantee that the class
+will always have certain fresh properties. In this case, anything
+that extends whale.Dispatcher will have a variable called _events.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    initialize: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>events holds a list of listeners grouped by event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>._events = [];
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>dispatch will retrieve and send out callbacks for the given event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    _dispatch: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name)</span> </span>{
+      <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>._events[name]) <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-keyword">this</span>._events[name].length; i++) {
+        <span class="hljs-keyword">var</span> listener = <span class="hljs-keyword">this</span>._events[name][i];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>a listener callback can be a function, or a string
+which represents a function name. Using this method, we can
+invoke the function name string on the registered context</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> listener.action === <span class="hljs-string">'function'</span>) {
+          listener.action.call (listener.ctx, <span class="hljs-keyword">this</span>);
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">var</span> fn = listener.ctx[listener.action];
+          fn.call (listener.ctx, <span class="hljs-keyword">this</span>);
+        }
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>trigger can be called on a list of events to dispatch
+note that events are just strings</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    trigger: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">arguments</span>.length; i++)
+        <span class="hljs-keyword">this</span>._dispatch (<span class="hljs-built_in">arguments</span>[i]);
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>register a callback (action) for given event (evnt)
+and use given context (ctx)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    when: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(evnt, action, ctx)</span> </span>{
+      <span class="hljs-keyword">var</span> events = <span class="hljs-keyword">this</span>._events[evnt] || (<span class="hljs-keyword">this</span>._events[evnt] = []);
+      ctx = ctx || <span class="hljs-keyword">this</span>; <span class="hljs-comment">// default context is the current object</span>
+      events.push ({ action: action, ctx: ctx });
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>Stop listening to an event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    stop: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(evnt, action, ctx)</span> </span>{
+      <span class="hljs-keyword">var</span> events, i;
+
+      <span class="hljs-keyword">if</span> (!evnt &amp;&amp; !action &amp;&amp; !ctx) {
+        <span class="hljs-keyword">this</span>._events = [];
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+      }
+
+      evntKeys = evnt ? [evnt] : <span class="hljs-built_in">Object</span>.keys(<span class="hljs-keyword">this</span>._events);
+      <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; evntKeys.length; i++) {
+        <span class="hljs-keyword">var</span> acts, remaining, e, k;
+
+        evnt = evntKeys[i];
+        acts = <span class="hljs-keyword">this</span>._events[evnt];
+
+        <span class="hljs-keyword">if</span> (!acts) <span class="hljs-keyword">continue</span>;
+
+        <span class="hljs-keyword">if</span> (!action &amp;&amp; !ctx) {
+          <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._events[evnt];
+          <span class="hljs-keyword">continue</span>;
+        }
+
+        remaining = [];
+        <span class="hljs-keyword">for</span> (k = <span class="hljs-number">0</span>; k &lt; acts.length; k++) {
+          e = acts[k];
+          <span class="hljs-keyword">if</span> (
+            action &amp;&amp; action !== e.action &amp;&amp;
+            action !== e.action._action ||
+            ctx &amp;&amp; ctx !== e.ctx
+          ) {
+            remaining.push (e);
+          }
+        }
+
+        <span class="hljs-keyword">if</span> (remaining.length) {
+          <span class="hljs-keyword">this</span>._events[evnt] = remaining;
+        } <span class="hljs-keyword">else</span> {
+          <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._events[evnt];
+        }
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    }
+
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <h3 id="listener">Listener</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> Listener = whale.Listener = Class.extend ({
+    initialize: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+      <span class="hljs-keyword">this</span>._listening = {};
+    },
+    listen: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(dispatcher, evnt, action, ctx)</span> </span>{
+      ctx = ctx || <span class="hljs-keyword">this</span>;
+      <span class="hljs-keyword">var</span> id = dispatcher._id;
+      <span class="hljs-keyword">this</span>._listening[id] = dispatcher;
+      dispatcher.when (evnt, action, ctx);
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    },
+    listenOnce: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(dispatcher, evnt, action, ctx)</span> </span>{
+      ctx = ctx || <span class="hljs-keyword">this</span>;
+      <span class="hljs-keyword">var</span> cb = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">this</span>.stopListening (dispatcher, evnt, cb);
+        action.apply (<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>);
+      }
+      cb._action = action;
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.listen (dispatcher, evnt, cb, ctx);
+    },
+    stopListening: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(dispatcher, evnt, action, ctx)</span> </span>{
+      <span class="hljs-keyword">var</span> id, disp;
+
+      id = dispatcher._id;
+      ctx = ctx || <span class="hljs-keyword">this</span>;
+
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> id <span class="hljs-keyword">in</span> <span class="hljs-keyword">this</span>._listening) {
+        disp = <span class="hljs-keyword">this</span>._listening[id];
+        disp.stop (evnt, action, ctx);
+      }
+
+      <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">Object</span>.keys (<span class="hljs-keyword">this</span>._listening[id]).length) <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._listening[id];
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>;
+    }
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <h3 id="view">View</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> View = whale.View = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name, deps, proto)</span> </span>{
+    <span class="hljs-keyword">var</span> obj = inject (deps, Dispatcher.extend (proto));
+    <span class="hljs-keyword">if</span> (name != <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span> register (name, obj);
+    <span class="hljs-keyword">return</span> obj;
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <h3 id="controller">Controller</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> Controller = whale.Controller = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(name, deps, proto)</span> </span>{
+    <span class="hljs-keyword">var</span> obj = inject (deps, Listener.extend (proto));
+    <span class="hljs-keyword">if</span> (name != <span class="hljs-literal">null</span>) <span class="hljs-keyword">return</span> register (name, obj);
+    <span class="hljs-keyword">return</span> obj;
+  }
+
+}.call(<span class="hljs-keyword">this</span>));</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

@@ -1,54 +1,73 @@
-/* A base Person Class */
+//     whale.js Classical Inheritance Example
+//     (c) 2015 Dalton Mills, www.ddmills.com
+
+// Person Class
+// ------------
+// Person extends the default class by calling ```whale.Class.extend```
 var Person = whale.Class.extend ({
-  /* construct acts as the constructor */
+  // the ```construct``` method acts as the constructor and will be called on object creation
   construct: function (name) {
     this.name = name;
   },
 
+  // attach an additional prototype method to this class
   greet: function () {
     console.log ('hello my name is ' + this.name);
   }
 });
 
-/* A pirate class that extends Person */
+// create an instance like normal, passing in a name to the constructor
+var bob = new Person ('Bob');
+
+bob.greet (); // => "hello my name is Bob"
+
+
+// Pirate class
+// -----------
+// Pirate extends Person
 var Pirate = Person.extend ({
   construct: function (name, weapon) {
-    /* call the super constructor with _super () */
+    // Person's constructor can be called with ```_super ()```
     this._super (name);
     this.weapon = weapon;
   },
 
-  /* override the person greet method */
+  // override the greet method on the parent class (Person)
   greet: function () {
     console.log ('Arrr matey, my name is ' + this.name + '. My weapon is a ' + this.weapon);
   }
 });
 
-/* Captain extends Pirate which extends Person */
+var pegleg = new Pirate ('Pegleg', 'cannon');
+pegleg.greet (); // => "Arrr matey, my name is Pegleg. My weapon is a cannon"
+
+// Captain class
+// -----------
+// Captain extends Pirate which extends Person
 var Captain = Pirate.extend ({
   construct: function (name) {
-    /* call the Pirate constructor */
+    // call the Pirate constructor
     this._super (name, 'Sword');
   },
 
   greet: function () {
-    this._super (); // call the super greet method from Pirate
+    // note here that _super() calls the greet method defined on Pirate
+    this._super ();
     console.log ('and I\'m the captain!');
   }
 });
 
-var bob = new Person ('Bob');
-var pegleg = new Pirate ('Pegleg', 'cannon');
 var cap = new Captain ('Gandalf');
+cap.greet (); // => "Arrr matey, my name is Gandalf. My weapon is a Sword", "and I'm the captain!"
 
-bob.greet ();
-pegleg.greet ();
-cap.greet ();
-/*
-  OUTPUT
+// Object Types
+// -----------
+// Classes maintain notion of type
+console.log (bob instanceof Person);     // => true
 
-  "hello my name is Bob"
-  "Arrr matey, my name is Pegleg. My weapon is a cannon"
-  "Arrr matey, my name is Gandalf. My weapon is a Sword"
-  "and I'm the captain!"
-*/
+console.log (pegleg instanceof Person);  // => true
+console.log (pegleg instanceof Pirate);  // => true
+
+console.log (cap instanceof Person);     // => true
+console.log (cap instanceof Pirate);     // => true
+console.log (cap instanceof Captain);    // => true
