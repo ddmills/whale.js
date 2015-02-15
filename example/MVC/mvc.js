@@ -1,4 +1,4 @@
-new whale.View ('buttonView', [], {
+whale.View ('buttonView', [], {
   template: '<button type="button"> click me </button>',
 
   construct: function (selector) {
@@ -17,7 +17,7 @@ new whale.View ('buttonView', [], {
 });
 
 
-new whale.Controller ('buttonController', ['buttonView'], {
+whale.Controller ('buttonController', ['buttonView'], {
 
   construct: function (buttonView) {
     this.views = [];
