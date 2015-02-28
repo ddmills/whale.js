@@ -46,8 +46,8 @@
     for (name in prop) {
       prototype[name] =
         name != 'initialize' &&
-        typeof prop[name] == 'function' &&
-        typeof _super[name] == 'function' &&
+        /^f/.test(typeof prop[name]) &&
+        /^f/.test(typeof _super[name]) &&
         fnTest.test (prop[name])
         ? (function (name, fn) {
             return function () {
@@ -109,7 +109,7 @@
     args = Array.prototype.slice.call (arguments, 1);
 
     // check if target is callable
-    if (typeof dep === 'function') {
+    if (/^f/.test(typeof dep)) {
       // temporary constructor
       tmp = function () {};
 
@@ -198,7 +198,7 @@
         // a listener callback can be a function, or a string
         // which represents a function name. Using this method, we can
         // invoke the function name string on the registered context
-        if (typeof listener.action === 'function') {
+        if (/^f/.test(typeof listener.action)) {
           listener.action.call (listener.ctx, this);
         } else {
           var fn = listener.ctx[listener.action];
@@ -269,7 +269,6 @@
       }
       return this;
     }
-
   });
 
   // ### Listener
@@ -325,6 +324,13 @@
     }
   });
 
+  // ### Model
+  //
+  var Model = whale.Model = Dispatcher.extend ({
+
+
+  });
+
   // ### View
   // View is just a factory that extends Dispatcher
   // Views can only send out events, and not listen to anything. Note
@@ -345,5 +351,162 @@
     if (name != null) return register (name, obj);
     return obj;
   }
+
+  var node = whale.Dispatcher.extend ({
+    splice: Array.prototype.splice,
+
+    init: function () {
+      this.length = 0;
+    },
+
+    construct: function (s) {
+      if (s.constructor === Array) {
+        this.elem = s;
+      } else if (s && s.nodeType) {
+        this.elem = [s];
+      } else if (typeof s == 'string') {
+        this.elem = [];
+        var div = document.createElement ('div');
+        div.innerHTML = s;
+        for (var i = div.childNodes.length-1; i >= 0; i--) {
+          this.elem[i] = div.childNodes[i];
+        }
+      }
+    },
+
+    on: function (e, cb, ctx) {
+      var self = this;
+      ctx = ctx || this;
+      return this.each (function (n) {
+        n.addEventListener (e, function() {
+          cb.call(ctx, self);
+        });
+      });
+    },
+
+    off: function (e, cb) {
+      return this.each (function (c) {
+        c.removeEventListener(e, cb)
+      });
+    },
+
+    remove: function() {
+      return this.each (function (e) { e.parentNode.removeChild (e); });
+    },
+
+    addClass: function (c) {
+      return this.each (function (e) { e.className += ' ' + c; });
+    },
+
+    each: function (cb) {
+      for (var i = 0; i < this.elem.length; i++) {
+        cb (this.elem[i]);
+      }
+      return this;
+    },
+
+    outer: function () {
+      return this.elem[0].outerHTML;
+    },
+
+    html: function (snippet) {
+      if (snippet || snippet === '') {
+        if (snippet instanceof this.constructor) {
+          return this.each (function(e) {
+            e.innerHTML = '';
+            snippet.each(function(e2) {
+              e.appendChild(e2);
+            });
+          });
+        }
+        return this.each (function (e) {
+          e.innerHTML = snippet;
+        });
+      }
+      return this.elem[0].innerHTML;
+    },
+
+    append: function (snippet) {
+      if (snippet instanceof this.constructor) {
+        return this.each (function (e) {
+          snippet.each(function(e2) {
+            e.appendChild(e2);
+          });
+        });
+      }
+      return e.insertAdjacentHTML ('beforeend', snippet);
+    },
+
+    prepend: function (snippet) {
+      if (snippet instanceof this.constructor) {
+        return this.each (function (e) {
+          snippet.each(function(e2) {
+            e.insertBefore(e2, e.firstChild);
+          });
+        });
+      }
+      return e.insertAdjacentHTML ('afterbegin', snippet);
+    },
+
+    before: function (snippet) {
+      if (snippet instanceof this.constructor) {
+        return this.each (function (e) {
+          snippet.each(function(e2) {
+            // e.parentNode.insertBefore(e2, e.nextSibling);
+            e.parentNode.insertBefore(e2, e);
+          });
+        });
+      }
+      return this.each (function (e) {
+        e.insertAdjacentHTML ('beforebegin', snippet);
+      });
+    },
+
+    after: function (snippet) {
+      var self = this;
+      if (snippet instanceof self.constructor) {
+        return this.each (function (e) {
+          snippet.each(function(e2) {
+            e.parentNode.insertBefore(e2, e.nextSibling);
+          });
+        });
+      }
+      return this.each (function (e) {
+        e.insertAdjacentHTML ('afterend', snippet);
+      });
+    },
+
+    find: function (selector) {
+      var res = [];
+      this.each (function (e) {
+        var q = e.querySelectorAll (selector);
+        for (var i = q.length-1; i >= 0; i--) {
+          res[i] = q[i];
+        }
+      });
+      return new this.constructor (res);
+    }
+  });
+
+  whale.register ('whale.node', node);
+
+  whale.Service ('whale.dom', ['whale.node'], {
+    _matches: {
+      '#': 'getElementById',
+      '.': 'getElementsByClassName',
+      '@': 'getElementsByName',
+      '=': 'getElementsByTagName'
+    },
+
+    construct: function (node) {
+      this.node = node;
+    },
+
+    find: function (s, complex) {
+      complex = complex || /\s/.test(s);
+      if (!complex && this._matches[s[0]]) return new this.node (document[this._matches[s[0]]](s.slice(1)));
+      return new this.node (document.querySelectorAll(s));
+    }
+  });
 
 }.call(this));
