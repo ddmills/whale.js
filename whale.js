@@ -1,4 +1,4 @@
-(function () {
+!(function () {
   // establish root object (typically window)
   var root = this;
 
@@ -352,7 +352,7 @@
     return obj;
   }
 
-  var node = whale.Dispatcher.extend ({
+  whale.register ('whale.node', whale.Class.extend ({
     splice: Array.prototype.splice,
 
     init: function () {
@@ -379,18 +379,18 @@
       ctx = ctx || this;
       return this.each (function (n) {
         n.addEventListener (e, function() {
-          cb.call(ctx, self);
+          cb.call (ctx, self);
         });
       });
     },
 
     off: function (e, cb) {
       return this.each (function (c) {
-        c.removeEventListener(e, cb)
+        c.removeEventListener (e, cb)
       });
     },
 
-    remove: function() {
+    remove: function () {
       return this.each (function (e) { e.parentNode.removeChild (e); });
     },
 
@@ -414,8 +414,8 @@
         if (snippet instanceof this.constructor) {
           return this.each (function(e) {
             e.innerHTML = '';
-            snippet.each(function(e2) {
-              e.appendChild(e2);
+            snippet.each (function (e2) {
+              e.appendChild (e2);
             });
           });
         }
@@ -429,8 +429,8 @@
     append: function (snippet) {
       if (snippet instanceof this.constructor) {
         return this.each (function (e) {
-          snippet.each(function(e2) {
-            e.appendChild(e2);
+          snippet.each (function (e2) {
+            e.appendChild (e2);
           });
         });
       }
@@ -440,8 +440,8 @@
     prepend: function (snippet) {
       if (snippet instanceof this.constructor) {
         return this.each (function (e) {
-          snippet.each(function(e2) {
-            e.insertBefore(e2, e.firstChild);
+          snippet.each (function (e2) {
+            e.insertBefore (e2, e.firstChild);
           });
         });
       }
@@ -451,9 +451,9 @@
     before: function (snippet) {
       if (snippet instanceof this.constructor) {
         return this.each (function (e) {
-          snippet.each(function(e2) {
+          snippet.each (function(e2) {
             // e.parentNode.insertBefore(e2, e.nextSibling);
-            e.parentNode.insertBefore(e2, e);
+            e.parentNode.insertBefore (e2, e);
           });
         });
       }
@@ -466,8 +466,8 @@
       var self = this;
       if (snippet instanceof self.constructor) {
         return this.each (function (e) {
-          snippet.each(function(e2) {
-            e.parentNode.insertBefore(e2, e.nextSibling);
+          snippet.each (function(e2) {
+            e.parentNode.insertBefore (e2, e.nextSibling);
           });
         });
       }
@@ -486,9 +486,7 @@
       });
       return new this.constructor (res);
     }
-  });
-
-  whale.register ('whale.node', node);
+  }));
 
   whale.Service ('whale.dom', ['whale.node'], {
     _matches: {
@@ -503,9 +501,9 @@
     },
 
     find: function (s, complex) {
-      complex = complex || /\s/.test(s);
-      if (!complex && this._matches[s[0]]) return new this.node (document[this._matches[s[0]]](s.slice(1)));
-      return new this.node (document.querySelectorAll(s));
+      complex = complex || /\s/.test (s);
+      if (!complex && this._matches[s[0]]) return new this.node (document[this._matches[s[0]]] (s.slice (1)));
+      return new this.node (document.querySelectorAll (s));
     }
   });
 

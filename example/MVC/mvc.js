@@ -32,7 +32,7 @@ whale.View ('alertView', ['whale.dom'], {
 
   close: function () {
     // delete the element from the DOM
-    this.element.remove();
+    this.element.remove ();
   },
 
   triggerClose: function () {
@@ -60,7 +60,7 @@ whale.Controller ('alertController', ['alertView'], {
 
   // close the view and delete it
   closeView: function (e) {
-    e.close();
+    e.close ();
     delete this.views[e._id];
   },
 });
