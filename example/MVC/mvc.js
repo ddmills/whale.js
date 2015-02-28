@@ -1,11 +1,16 @@
 // ## View
+// make a new View called "alertView" which depends
+// on "whale.dom" - a built in Service for manipulating HTML elements
 whale.View ('alertView', ['whale.dom'], {
   template: '<div class="alert"><span class="close">x</span><h4></h4><span class="message"></span></div>',
 
+  // construct method gets called on object creation
+  // it will get passed the "whale.dom" object automatically
   construct: function (dom, data) {
     this.dom = dom;
     this.data = data;
 
+    // create a new DOM element
     this.element = new this.dom.node (this.template);
 
     // manipulate the DOM based on the data
@@ -14,16 +19,19 @@ whale.View ('alertView', ['whale.dom'], {
     this.element.find ('h4').html (data.title);
     this.element.addClass (data.type);
 
-    // now we are binding a DOM event to trigger the 'close' event
+    // now we are binding a DOM 'click' event to trigger the 'close' event
+    // the last argument "this" is the context of the callback method
     this.element.find ('.close').on ('click', this.triggerClose, this);
   },
 
+  // render this view into a given selector
   render: function (selector) {
     this.container = this.dom.find (selector);
     this.container.append (this.element);
   },
 
   close: function () {
+    // delete the element from the DOM
     this.element.remove();
   },
 
@@ -57,7 +65,8 @@ whale.Controller ('alertController', ['alertView'], {
   },
 });
 
-// ## Data
+// ## Model
+// TODO use whale.Model
 var data = [{
   title   : 'Warning!',
   message : 'Don\'t drink the koolaid man. It\'s poisoned.',
