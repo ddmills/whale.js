@@ -313,7 +313,6 @@
         throw 'First argument was not a valid Dispatcher object';
       }
 
-
       // we only want to stop listening to this specific dispatcher
       id = dispatcher._id;
       disp = this._listening[id];
@@ -351,6 +350,72 @@
     if (name != null) return register (name, obj);
     return obj;
   }
+
+  // ### whale.promise
+  // a small promise callback library with done, fail, always
+  whale.register ('whale.promise', whale.Class.extend ({
+    initialize: function () {
+      this._response = null;
+      this._onDone = [];
+      this._onFail = [];
+      this._onAlways = [];
+      this.pending = true;
+      this.fulfilled = false;
+      this.rejected = false;
+      this.settled = false;
+    },
+    construct: function(ctx) {
+      this._ctx = ctx || this;
+    },
+    resolve: function (data) {
+      if (this.pending) {
+        this._response = data;
+        this.fulfilled = true;
+        this.settled = true;
+        this.pending = false;
+        for (var i = 0; i < this._onDone.length; i++) {
+          this._onDone[i][0].call(this._onDone[i][1], data);
+        }
+        for (var i = 0; i < this._onAlways.length; i++) {
+          this._onAlways[i][0].call(this._onAlways[i][1], true, data);
+        }
+      }
+      return this;
+    },
+    reject: function (reason) {
+      if (this.pending) {
+        this._response = reason;
+        this.rejected = true;
+        this.settled = true;
+        this.pending = false;
+        for (var i = 0; i < this._onFail.length; i++) {
+          this._onFail[i][0].call (this._onFail[i][1], reason);
+        }
+        for (var i = 0; i < this._onAlways.length; i++) {
+          this._onAlways[i][0].call (this._onAlways[i][1], false, reason);
+        }
+      }
+      return this;
+    },
+    done: function (cb, ctx) {
+      var c = ctx || this._ctx;
+      this._onDone.push ([cb, c]);
+      if (this.fulfilled) cb.call (c, this._response);
+      return this;
+    },
+    fail: function (cb, ctx) {
+      var c = ctx || this._ctx;
+      this._onFail.push ([cb, c]);
+      if (this.rejected) cb.call (c, this._response);
+      return this;
+    },
+    always: function (cb, ctx) {
+      var c = ctx || this._ctx;
+      this._onAlways.push ([cb, c]);
+      if (this.settled) cb.call (c, this.fulfilled, this._response);
+      return this;
+    }
+  }));
 
   whale.register ('whale.node', whale.Class.extend ({
     splice: Array.prototype.splice,
