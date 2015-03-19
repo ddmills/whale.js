@@ -82,7 +82,6 @@
     return Class;
   }
 
-
   var ID_COUNT = 0;
   var genId = whale.genId = function (prefix) {
     var id = ++ID_COUNT + '';
@@ -157,6 +156,7 @@
     });
   }
 
+  // ## Factory
   // Factory creates a new class based on proto.
   // It will build the class and insert the array of dependencies
   // into the constructor.
@@ -168,6 +168,7 @@
     return obj;
   }
 
+  // ## Service
   // Similiar to Factory, Service will make a new object based on proto
   // with the array of given dependencies. Service will create a single
   // instance of the new class and register that instance as given name
@@ -176,7 +177,8 @@
     if (name != null) return register (name, obj);
     return obj;
   }
-  // ### Dispatcher Class
+
+  // ## Dispatcher Class
   // The Dispatcher class can trigger events
   var Dispatcher = whale.Dispatcher = Class.extend ({
     // initialize is similiar to the construct method, exept it doesn't
@@ -271,7 +273,7 @@
     }
   });
 
-  // ### Listener
+  // ## Listener
   var Listener = whale.Listener = Class.extend ({
     initialize: function () {
       this._listening = {};
@@ -323,14 +325,12 @@
     }
   });
 
-  // ### Model
-  //
+  // ## Model
+  // TODO
   var Model = whale.Model = Dispatcher.extend ({
-
-
   });
 
-  // ### View
+  // ## View
   // View is just a factory that extends Dispatcher
   // Views can only send out events, and not listen to anything. Note
   // that doesn't mean Views don't listen to DOM events, Views should listen
@@ -341,7 +341,7 @@
     return obj;
   }
 
-  // ### Controller
+  // ## Controller
   // Controller is just a factory that extends Listener
   // Controllers should be able to listen to events models and views
   // to wire them together
@@ -351,7 +351,7 @@
     return obj;
   }
 
-  // ### whale.promise
+  // ## whale.promise
   // a small promise callback library with done, fail, always
   whale.register ('whale.promise', whale.Class.extend ({
     initialize: function () {
@@ -364,9 +364,11 @@
       this.rejected = false;
       this.settled = false;
     },
+
     construct: function(ctx) {
       this._ctx = ctx || this;
     },
+
     resolve: function (data) {
       if (this.pending) {
         this._response = data;
@@ -382,6 +384,7 @@
       }
       return this;
     },
+
     reject: function (reason) {
       if (this.pending) {
         this._response = reason;
@@ -397,18 +400,21 @@
       }
       return this;
     },
+
     done: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onDone.push ([cb, c]);
       if (this.fulfilled) cb.call (c, this._response);
       return this;
     },
+
     fail: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onFail.push ([cb, c]);
       if (this.rejected) cb.call (c, this._response);
       return this;
     },
+
     always: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onAlways.push ([cb, c]);
@@ -417,6 +423,8 @@
     }
   }));
 
+  // ## whale.node
+  // simple DOM selector/manipulator
   whale.register ('whale.node', whale.Class.extend ({
     splice: Array.prototype.splice,
 
@@ -553,6 +561,8 @@
     }
   }));
 
+  // ## whale.dom
+  // base DOM object which can find and create new nodes
   whale.Service ('whale.dom', ['whale.node'], {
     _matches: {
       '#': 'getElementById',
@@ -566,10 +576,112 @@
     },
 
     find: function (s, complex) {
+      // FIXME make similar to whale.node.find
       complex = complex || /\s/.test (s);
       if (!complex && this._matches[s[0]]) return new this.node (document[this._matches[s[0]]] (s.slice (1)));
       return new this.node (document.querySelectorAll (s));
     }
+  });
+
+  // ## whale.ajax
+  // A service for making AJAX calls, depends on whale.promise
+  whale.Service ('whale.ajax', ['whale.promise'], {
+    construct: function (Prom) {
+      this.Prom = Prom;
+      this.req = false;
+    },
+
+    _xhr: function() {
+      // FIXME: should this be window or root?
+      return new XMLHttpRequest;
+    },
+
+    encode: function(data) {
+      var encoded = '';
+      if (typeof data === 'string') {
+        encoded = data;
+      } else {
+        var e = encodeURIComponent;
+        for (var k in data) {
+          if (data.hasOwnProperty(k)) encoded += '&' + e(k) + '=' + e(data[k]);
+        }
+      }
+      return encoded;
+    },
+
+    // Send a request with a URL
+    request: function (params) {
+      var p, req, type, body, url;
+
+      if (params.url) {
+        url = params.url;
+      } else {
+        throw 'a url parameter must be specified';
+      }
+
+      type = params.type || params.method || 'GET';
+      body = params.body || params.data || '';
+      headers = params.headers || {};
+      content = params.content || 'application/x-www-form-urlencoded; charset=UTF-8';
+
+      p = new this.Prom;
+      req = this._xhr();
+
+
+      // TODO check timeout
+      req.onreadystatechange = function () {
+        if (req.readyState == 4) {
+          var s = req.status;
+          if (!s || (s < 200 || s >= 300) && s !== 304) {
+            p.reject (req);
+          } else {
+            p.resolve (req);
+          }
+        }
+      };
+
+      if (req) {
+          if (type == 'GET' && body) {
+            url += '?' + this.encode(body);
+            body = null;
+          }
+
+          req.open (type, url);
+          req.setRequestHeader ('X-Requested-With', 'XMLHttpRequest');
+          req.setRequestHeader ('Content-Type', content);
+
+          for (var h in headers) {
+            if (headers.hasOwnProperty(h)) {
+              req.setRequestHeader(h, headers[h]);
+            }
+          }
+          req.send (body);
+      } else {
+        p.reject('window does not support ActiveXObject or XMLHttpRequest');
+      }
+      return p;
+    },
+
+    get: function (parameters) {
+      parameters.type = 'GET';
+      return this.request(parameters);
+    },
+
+    post: function (parameters) {
+      parameters.type = 'POST';
+      return this.request(parameters);
+    },
+
+    put: function (parameters) {
+      parameters.type = 'PUT';
+      return this.request(parameters);
+    },
+
+    delete: function (parameters) {
+      parameters.type = 'DELETE';
+      return this.request(parameters);
+    }
+
   });
 
 }.call(this));
