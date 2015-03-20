@@ -331,6 +331,13 @@
   // ## Model
   // TODO
   var Model = whale.Model = Dispatcher.extend ({
+    construct: function (attrs) {
+      this.attrs = attrs || {};
+    },
+
+    get: function (attr) {
+      return this.attrs[attr];
+    },
   });
 
   // ## View
