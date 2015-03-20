@@ -78,7 +78,7 @@ var blueBoat = whale.make('Boat', 'blue');
 
 // 3. Also since the class is registered:
 var Boat = whale.get('Boat');
-var yellowBoat = new Boat('yellow);
+var yellowBoat = new Boat('yellow');
 
 // We can also get the Harbor instance:
 var harbor = whale.get('Harbor');
