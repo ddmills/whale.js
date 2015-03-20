@@ -24,9 +24,12 @@
     return this;
   }
 
+  var isFunction = whale.isFunction = function (obj) {
+    return typeof obj === 'function';
+  }
+
   // Class inheritance idea from John Resig http://ejohn.org/
   // modified to include initialize()
-  var fnTest = /xyz/.test (function(){xyz;}) ? /\b_super\b/ : /.*/;
   var INITIALIZING;
   var Class = whale.Class = function () {};
   Class.prototype.initialize = function () {
@@ -46,9 +49,9 @@
     for (name in prop) {
       prototype[name] =
         name != 'initialize' &&
-        /^f/.test(typeof prop[name]) &&
-        /^f/.test(typeof _super[name]) &&
-        fnTest.test (prop[name])
+        isFunction (prop[name]) &&
+        isFunction (_super[name]) &&
+        isFunction (prop[name])
         ? (function (name, fn) {
             return function () {
               var tmp, ret;
@@ -108,7 +111,7 @@
     args = Array.prototype.slice.call (arguments, 1);
 
     // check if target is callable
-    if (/^f/.test(typeof dep)) {
+    if (isFunction (dep)) {
       // temporary constructor
       tmp = function () {};
 
@@ -200,7 +203,7 @@
         // a listener callback can be a function, or a string
         // which represents a function name. Using this method, we can
         // invoke the function name string on the registered context
-        if (/^f/.test(typeof listener.action)) {
+        if (isFunction (listener.action)) {
           listener.action.call (listener.ctx, this);
         } else {
           var fn = listener.ctx[listener.action];
@@ -353,7 +356,7 @@
 
   // ## whale.promise
   // a small promise callback library with done, fail, always
-  whale.register ('whale.promise', whale.Class.extend ({
+  var promise = whale.promise = whale.register ('whale.promise', whale.Class.extend ({
     initialize: function () {
       this._response = null;
       this._onDone = [];
@@ -369,33 +372,37 @@
       this._ctx = ctx || this;
     },
 
-    resolve: function (data) {
+    resolve: function () {
       if (this.pending) {
-        this._response = data;
+        this._response = arguments;
         this.fulfilled = true;
         this.settled = true;
         this.pending = false;
         for (var i = 0; i < this._onDone.length; i++) {
-          this._onDone[i][0].call(this._onDone[i][1], data);
+          this._onDone[i][0].apply (this._onDone[i][1], arguments);
         }
         for (var i = 0; i < this._onAlways.length; i++) {
-          this._onAlways[i][0].call(this._onAlways[i][1], true, data);
+          var args = Array.prototype.slice.call(arguments);
+          args.unshift(true);
+          this._onAlways[i][0].apply (this._onAlways[i][1], args);
         }
       }
       return this;
     },
 
-    reject: function (reason) {
+    reject: function () {
       if (this.pending) {
-        this._response = reason;
+        this._response = arguments;
         this.rejected = true;
         this.settled = true;
         this.pending = false;
         for (var i = 0; i < this._onFail.length; i++) {
-          this._onFail[i][0].call (this._onFail[i][1], reason);
+          this._onFail[i][0].apply (this._onFail[i][1], arguments);
         }
         for (var i = 0; i < this._onAlways.length; i++) {
-          this._onAlways[i][0].call (this._onAlways[i][1], false, reason);
+          var args = Array.prototype.slice.call(arguments);
+          args.unshift(false);
+          this._onAlways[i][0].apply (this._onAlways[i][1], args);
         }
       }
       return this;
@@ -404,28 +411,28 @@
     done: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onDone.push ([cb, c]);
-      if (this.fulfilled) cb.call (c, this._response);
+      if (this.fulfilled) cb.apply (c, this._response);
       return this;
     },
 
     fail: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onFail.push ([cb, c]);
-      if (this.rejected) cb.call (c, this._response);
+      if (this.rejected) cb.apply (c, this._response);
       return this;
     },
 
     always: function (cb, ctx) {
       var c = ctx || this._ctx;
       this._onAlways.push ([cb, c]);
-      if (this.settled) cb.call (c, this.fulfilled, this._response);
+      if (this.settled) cb.apply (c, this.fulfilled, this._response);
       return this;
     }
   }));
 
   // ## whale.node
   // simple DOM selector/manipulator
-  whale.register ('whale.node', whale.Class.extend ({
+  var node = whale.node = whale.register ('whale.node', whale.Class.extend ({
     splice: Array.prototype.splice,
 
     init: function () {
@@ -558,12 +565,23 @@
         }
       });
       return new this.constructor (res);
+    },
+
+    val: function (data) {
+      // TODO check type of node
+      if (data) {
+        this.each (function () {
+          this.value = data;
+        });
+      } else {
+        return this.elem[0].value;
+      }
     }
   }));
 
   // ## whale.dom
   // base DOM object which can find and create new nodes
-  whale.Service ('whale.dom', ['whale.node'], {
+  var dom = whale.dom = whale.Service ('whale.dom', ['whale.node'], {
     _matches: {
       '#': 'getElementById',
       '.': 'getElementsByClassName',
@@ -585,33 +603,46 @@
 
   // ## whale.ajax
   // A service for making AJAX calls, depends on whale.promise
-  whale.Service ('whale.ajax', ['whale.promise'], {
+  var ajax = whale.ajax = whale.Service ('whale.ajax', ['whale.promise'], {
     construct: function (Prom) {
       this.Prom = Prom;
       this.req = false;
     },
 
     _xhr: function() {
-      // FIXME: should this be window or root?
       return new XMLHttpRequest;
     },
 
     encode: function(data) {
-      var encoded = '';
-      if (typeof data === 'string') {
-        encoded = data;
-      } else {
-        var e = encodeURIComponent;
-        for (var k in data) {
-          if (data.hasOwnProperty(k)) encoded += '&' + e(k) + '=' + e(data[k]);
-        }
+      if (!data) return '';
+
+      var encoded, append;
+
+      encoded = [];
+
+      append = function (k, v) {
+        v = isFunction (v) ? v () : (v == null ? '' : v);
+        encoded[encoded.length] = encodeURIComponent (k) + '=' + encodeURIComponent(v);
       }
-      return encoded;
+
+      if (Array.isArray (data) || typeof data === 'object') {
+        for (var k in data) {
+          if (data.hasOwnProperty (k)) append (k, data[k]);
+        }
+      } else {
+        append (data);
+      }
+
+      return encoded.join ('&').replace (/%20/g, '+');
     },
 
     // Send a request with a URL
     request: function (params) {
       var p, req, type, body, url;
+
+      if (typeof params === 'string') {
+        params = { url: params };
+      }
 
       if (params.url) {
         url = params.url;
@@ -619,8 +650,9 @@
         throw 'a url parameter must be specified';
       }
 
-      type = params.type || params.method || 'GET';
-      body = params.body || params.data || '';
+      type = (params.type || params.method || 'GET').toUpperCase ();
+      body = this.encode (params.body || params.data || '');
+      parse = params.parse || false;
       headers = params.headers || {};
       content = params.content || 'application/x-www-form-urlencoded; charset=UTF-8';
 
@@ -633,28 +665,50 @@
         if (req.readyState == 4) {
           var s = req.status;
           if (!s || (s < 200 || s >= 300) && s !== 304) {
-            p.reject (req);
+            if (parse) {
+              try {
+                p.reject (JSON.parse (req.responseText), req);
+              } catch (e) {
+                p.reject ('Ajax request returned with error status: ' + req.status, req);
+              }
+            } else {
+              p.reject (req.responseText, req);
+            }
           } else {
-            p.resolve (req);
+            if (parse) {
+              try {
+                p.resolve (JSON.parse (req.responseText), req);
+              } catch (e) {
+                p.reject ('responseText is not valid JSON', req);
+              }
+            } else {
+              p.resolve (req.responseText, req);
+            }
           }
         }
       };
 
       if (req) {
           if (type == 'GET' && body) {
-            url += '?' + this.encode(body);
+            url += '?' + body;
             body = null;
           }
 
           req.open (type, url);
           req.setRequestHeader ('X-Requested-With', 'XMLHttpRequest');
-          req.setRequestHeader ('Content-Type', content);
+
+          if (type == 'POST') {
+            req.setRequestHeader ('Content-Type', content);
+            req.setRequestHeader ('Content-length', body.length);
+            req.setRequestHeader ('Connection', 'close');
+          }
 
           for (var h in headers) {
-            if (headers.hasOwnProperty(h)) {
-              req.setRequestHeader(h, headers[h]);
+            if (headers.hasOwnProperty (h)) {
+              req.setRequestHeader (h, headers[h]);
             }
           }
+
           req.send (body);
       } else {
         p.reject('window does not support ActiveXObject or XMLHttpRequest');
@@ -663,23 +717,37 @@
     },
 
     get: function (parameters) {
-      parameters.type = 'GET';
-      return this.request(parameters);
+      return this.request (parameters);
     },
 
     post: function (parameters) {
-      parameters.type = 'POST';
-      return this.request(parameters);
+      if (typeof parameters === 'string') {
+        var url = parameters;
+        parameters = { type: 'POST', url: url };
+      } else {
+        parameters.type = 'POST';
+      }
+      return this.request (parameters);
     },
 
     put: function (parameters) {
-      parameters.type = 'PUT';
-      return this.request(parameters);
+      if (typeof parameters === 'string') {
+        var url = parameters;
+        parameters = { type: 'PUT', url: url };
+      } else {
+        parameters.type = 'PUT';
+      }
+      return this.request (parameters);
     },
 
     delete: function (parameters) {
-      parameters.type = 'DELETE';
-      return this.request(parameters);
+      if (typeof parameters === 'string') {
+        var url = parameters;
+        parameters = { type: 'DELETE', url: url };
+      } else {
+        parameters.type = 'DELETE';
+      }
+      return this.request (parameters);
     }
 
   });

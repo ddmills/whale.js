@@ -1,22 +1,23 @@
-whale.Factory ('github', ['whale.ajax'], {
-  construct: function(ajax, name) {
-    this.ajax = ajax;
-  },
-  fetchUser: function (user) {
-    return this.ajax.request({
-      url: 'https://api.github.com/users/',
-      type: 'get',
-      body: user
-    });
-  }
-});
+// Some of the DOM elements
+var button = whale.dom.find ('#search');
+var input = whale.dom.find ('#username');
+var resp = whale.dom.find ('#result');
 
-var github = whale.make ('github', 'hello');
+// Do stuff when the button is clicked
+button.on ('click', function (e) {
 
-github.fetchUser('ddmills')
-  .done (function (data) {
-    console.log (data);
+  resp.html ('loading...');
+
+  // get the username that was entered
+  var val = input.val ();
+
+  // do a GET request (returns a promise)
+  whale.ajax.get ({
+    url: 'https://api.github.com/users/' + val,
+    parse: true // Parse the response to JSON
   })
-  .always (function (err, data) {
-    console.log (data);
+  .always (function (success, response) {
+    resp.html (JSON.stringify (response, null, 2));
   });
+
+});
