@@ -7,10 +7,10 @@ Whale is a tiny library which provides strong MVC tools and components.
 * Events (dispatchers and listeners)
 * Model, View, Controller classes
 * DOM manipulation and query
-* AJAX functions
 * Promises
+* AJAX functions
 
-## Classical Inheritance
+# Classical Inheritance
 Create a class by extending the base whale.Class:
 ```javascript
 var Person = whale.Class.extend ({
@@ -40,7 +40,7 @@ console.log(pegleg instanceof Person); // true
 console.log(pegleg instanceof Pirate); // true
 ```
 
-## Dependency Injection
+# Dependency Injection
 
 ### whale.Service
 Create a "Service" by using ```whale.Service```. A Service is an object that only has once instance, similar to a singleton. The first argument is the name of the service, this get registered with whale. The second argument is an array of dependencies, which is anything registered with whale. The third argument is the class declaration for the Harbor service.
@@ -86,7 +86,7 @@ console.log (harbor.boats); // logs array of Boats [greenBoat, blueBoat, yellowB
 ```
 
 
-## Events
+# Events
 In whale, events are handled by the built in whale.Dispatcher and whale.Listener Classes. A whale.Dispatcher can trigger events, and a Listener can listen to events.
 
 
@@ -127,7 +127,7 @@ jim.sing(); // Tom's "orderDrink" and then "drink" methods are called
 jim.sing(); // Tom's "drink" method is called again
 ```
 
-## Model View Controller classes
+# Model View Controller classes
 
 ### whale.Model
 todo
@@ -138,7 +138,7 @@ todo
 ### whale.Controller
 todo
 
-## whale.Dom, whale.Node - DOM manipulation
+# DOM manipulation
 whale.Dom is a built in whale Service which gives access to the DOM.
 whale.Node is a built in whale Class that wraps the results of a query (a list of DOM nodes).
 
@@ -182,7 +182,7 @@ n.on(evnt, callback, context); // listen to a DOM event from this element(s)
 n.off(event, callback); // stop listening to a DOM event from this element(s)
 ```
 
-## whale.Promise 
+# whale.Promise 
 Basic promise with resolve(), reject(), done(), fail(), always().
 
 A function that returns a promise:
@@ -225,5 +225,62 @@ p.always(function(resolved, data) {
 doAsyncStuff().done(...).fail(...).done(..).always(...);
 ```
 
+Promises have four variables that describe the state:
+```javascript
+p.pending; //initial state, not fulfilled or rejected.
+p.fulfilled; //successful operation
+p.rejected; //failed operation.
+p.settled; //the Promise is either fulfilled or rejected, but not pending.
+```
 
+# whale.Ajax
+Create AJAX requests with whale. All AJAX requests return a whale.Promise.
 
+The format for creating a request:
+```javascript
+var p = whale.Ajax.request({
+  url: 'http://api.example.com', // required
+  method: 'post', // defaults to "get", alias: type
+  body: {
+    'key': 'value',
+    'arr': [123, 412, 199, 'other']
+  }, // alias: data
+  parse: true, // defaults to "false"
+  content: 'application/javascript' // defaults to 'application/x-www-form-urlencoded; charset=UTF-8'
+  headers: {
+    'X-API-TOKEN': '123kmsdfiu2'
+  }, // headers are set depending on request
+});
+```
+Ajax request return a Promise. When the promise is resolved it will return the responseText and the xhr object. If the parse option is set to true then the response will automatically be parsed to JSON. If invalid JSON gets returned the promise fails.
+```javascript
+whale.Ajax.Request('http://api.example.com')
+  .done(function(response, xhr) {
+    console.log(response);
+    console.log(response.status);
+  })
+  .fail(function(response, xhr) {
+    console.log(response);
+    console.log(response.status);
+  }),
+  .always(function(success, response, xhr) {
+    ...
+  });
+```
+
+There are also shortcuts for creating GET, PUT, POST, DELETE requests:
+```javascript
+whale.Ajax.get('http://api.example.com'); // pass just a URL
+whale.Ajax.get({ url ... }); // pass parameter string
+whale.Ajax.post(...);
+whale.Ajax.put(...);
+whale.Ajax.delete(...);
+```
+
+### whale.Ajax.encode
+//todo
+
+# no conflict
+```javascript
+var w = whale.noConflict();
+```
