@@ -213,7 +213,7 @@
     },
 
     // dispatch will retrieve and send out callbacks for the given event
-    _dispatch: function (name) {
+    _dispatch: function (name, args) {
       var evnts = this._events[name];
       if (!evnts) return this;
       for (var i = 0; i < evnts.length; i++) {
@@ -222,10 +222,9 @@
         // which represents a function name. Using this method, we can
         // invoke the function name string on the registered context
         if (isFunction (listener.action)) {
-          listener.action.call (listener.ctx, this);
+          listener.action.apply (listener.ctx, args);
         } else {
-          var fn = listener.ctx[listener.action];
-          fn.call (listener.ctx, this);
+          listener.ctx[listener.action].apply (listener.ctx, args);
         }
       }
       return this;
@@ -233,11 +232,10 @@
 
     // trigger can be called on a list of events to dispatch
     // note that events are just strings
-    trigger: function () {
-      for (var i = 0; i < arguments.length; i++) {
-        this._dispatch (arguments[i]);
-      }
-      return this;
+    trigger: function (evnt) {
+      var args = Array.prototype.slice.call (arguments, 1);
+      args.unshift (this);
+      return this._dispatch (evnt, args);
     },
 
     // register a callback (action) for given event (evnt)
@@ -384,6 +382,7 @@
       var self = this;
 
       this.trigger ('request');
+      this.trigger ('fetch');
 
       var p = whale.Ajax.get ({
         url: this.url (),
@@ -392,6 +391,7 @@
 
       p.done (function (data) {
         self.set (self.parse (data));
+        self.trigger ('fetched');
         self.trigger ('sync');
       });
 
@@ -400,6 +400,9 @@
 
     save: function (key, val) {
       var attrs, method, self = this;
+      this.trigger ('request');
+      this.trigger ('save');
+
       (typeof key === 'object') ? attrs = key : (attrs = {})[key] = val;
       if (key == null) attrs = this.attrs;
       method = this.isNew () ? 'POST' : 'PUT';
@@ -414,6 +417,8 @@
         data = self.parse (data);
         if (data) {
           this.set (data);
+          self.trigger ('saved');
+          self.trigger ('sync');
         }
       });
 

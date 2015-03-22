@@ -59,9 +59,9 @@ whale.Controller ('alertController', ['alertView'], {
   },
 
   // close the view and delete it
-  closeView: function (e) {
-    e.close ();
-    delete this.views[e._id];
+  closeView: function (view) {
+    view.close ();
+    delete this.views[view._id];
   },
 });
 
