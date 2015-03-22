@@ -199,6 +199,8 @@
     return obj;
   }
 
+  //
+
   // ## Dispatcher Class
   // The Dispatcher class can trigger events
   var Dispatcher = whale.Dispatcher = Class.extend ({
@@ -345,7 +347,6 @@
   });
 
   // ## Model
-  // TODO
   var Model = whale.Dispatcher.extend ({
     idAttribute: 'id',
     attrs: {},
@@ -453,9 +454,39 @@
       return this;
     }
   });
-
   whale.Model = function (name, deps, proto) {
+    proto = proto || {};
     var obj = inject (deps, Model.extend (proto));
+    if (name != null) return register (name, obj);
+    return obj;
+  }
+
+  // ## collection
+  var Collection = whale.Dispatcher.extend ({
+    length: 0,
+    models: {},
+    _byId: {},
+    model: Model,
+    construct: function (model, models) {
+      if (models) this.set (models);
+    },
+    reset: function () {
+      this.length = 0;
+      this.models = {};
+      this._byId = {};
+    },
+    parse: function (resp) {
+      return resp;
+    },
+    set: function (models) {
+      models = Array.isArray (models) ? models : [models];
+      console.log (models);
+      return this;
+    },
+  });
+  whale.Collection = function (name, deps, proto) {
+    proto = proto || {};
+    var obj = inject (deps, Collection.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
   }
@@ -466,6 +497,7 @@
   // that doesn't mean Views don't listen to DOM events, Views should listen
   // to DOM events, and pass those on to Controllers.
   whale.View = function (name, deps, proto) {
+    proto = proto || {};
     var obj = inject (deps, Dispatcher.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
@@ -476,6 +508,7 @@
   // Controllers should be able to listen to events models and views
   // to wire them together
   whale.Controller = function (name, deps, proto) {
+    proto = proto || {};
     var obj = inject (deps, Listener.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
@@ -483,7 +516,7 @@
 
   // ## whale.Promise
   // a small promise callback library with done, fail, always
-  var Promise = whale.Promise = whale.register ('whale.Promise', whale.Class.extend ({
+  whale.Promise = whale.register ('whale.Promise', whale.Class.extend ({
     initialize: function () {
       this._response = null;
       this._onDone = [];
