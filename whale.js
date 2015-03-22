@@ -28,6 +28,22 @@
     return typeof obj === 'function';
   }
 
+  var clone = whale.clone = function (obj) {
+    var c, k;
+
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    c = obj.constructor();
+
+    for (k in obj) {
+      c[k] = clone (obj[k]);
+    }
+
+    return c;
+  }
+
   // Class inheritance idea from John Resig http://ejohn.org/
   // modified to include initialize()
   var INITIALIZING;
@@ -45,6 +61,8 @@
     INITIALIZING = true;
     prototype = new this;
     INITIALIZING = false;
+
+    var ctor = false;
 
     for (name in prop) {
       prototype[name] =
@@ -330,22 +348,119 @@
 
   // ## Model
   // TODO
-  var Model = whale.Model = Dispatcher.extend ({
+  var Model = whale.Dispatcher.extend ({
+    idAttribute: 'id',
+    attrs: {},
+    urlRoot: '',
+
     construct: function (attrs) {
-      this.attrs = attrs || {};
+      if (attrs) this.set (attrs);
+    },
+
+    url: function () {
+      var base = this.collection ? this.urlRoot || this.collection.urlRoot : this.urlRoot;
+      if (!base) throw 'Model does not have a urlRoot or is part of a collection with a urlRoot.';
+      if (this.isNew()) return base;
+      return base.replace(/([^\/])$/, '$1/') + encodeURIComponent(this.id);
+    },
+
+    toJSON: function () {
+      return whale.clone (this.attrs);
+    },
+
+    isNew: function () {
+      return !this.has (this.idAttribute);
     },
 
     get: function (attr) {
       return this.attrs[attr];
     },
+
+    has: function (attr) {
+      return this.get (attr) != null;
+    },
+
+    fetch: function (options) {
+      var self = this;
+
+      this.trigger ('request');
+
+      var p = whale.Ajax.get ({
+        url: this.url (),
+        parse: true
+      });
+
+      p.done (function (data) {
+        self.set (self.parse (data));
+        self.trigger ('sync');
+      });
+
+      return p;
+    },
+
+    save: function (key, val) {
+      var attrs, method, self = this;
+      (typeof key === 'object') ? attrs = key : (attrs = {})[key] = val;
+      if (key == null) attrs = this.attrs;
+      method = this.isNew () ? 'POST' : 'PUT';
+      var p = whale.Ajax.request ({
+        method: method,
+        data: attrs,
+        url: this.url (),
+        parse: true
+      });
+
+      p.done (function (data) {
+        data = self.parse (data);
+        if (data) {
+          this.set (data);
+        }
+      });
+
+      return p;
+    },
+
+    // Default parse method for parsing responses from server
+    parse: function (attrs) {
+      return attrs;
+    },
+
+    set: function (key, val) {
+      var attr, attrs = {};
+
+      if (key == null) return this;
+
+      // evil one liner to make source smaller
+      (typeof key === 'object') ? attrs = key : (attrs = {})[key] = val;
+
+      // check for presence of ID attribute
+      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
+
+      for (attr in attrs) {
+        if (attrs.hasOwnProperty (attr)) this.attrs[attr] = attrs[attr];
+      }
+
+      return this;
+    },
+
+    unset: function (attr) {
+      delete this.attrs[attr];
+      return this;
+    }
   });
+
+  whale.Model = function (name, deps, proto) {
+    var obj = inject (deps, Model.extend (proto));
+    if (name != null) return register (name, obj);
+    return obj;
+  }
 
   // ## View
   // View is just a factory that extends Dispatcher
   // Views can only send out events, and not listen to anything. Note
   // that doesn't mean Views don't listen to DOM events, Views should listen
   // to DOM events, and pass those on to Controllers.
-  var View = whale.View = function (name, deps, proto) {
+  whale.View = function (name, deps, proto) {
     var obj = inject (deps, Dispatcher.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
@@ -355,15 +470,15 @@
   // Controller is just a factory that extends Listener
   // Controllers should be able to listen to events models and views
   // to wire them together
-  var Controller = whale.Controller = function (name, deps, proto) {
+  whale.Controller = function (name, deps, proto) {
     var obj = inject (deps, Listener.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
   }
 
-  // ## whale.promise
+  // ## whale.Promise
   // a small promise callback library with done, fail, always
-  var promise = whale.promise = whale.register ('whale.promise', whale.Class.extend ({
+  var Promise = whale.Promise = whale.register ('whale.Promise', whale.Class.extend ({
     initialize: function () {
       this._response = null;
       this._onDone = [];
@@ -439,7 +554,7 @@
 
   // ## whale.node
   // simple DOM selector/manipulator
-  var node = whale.node = whale.register ('whale.node', whale.Class.extend ({
+  whale.Node = whale.register ('whale.Node', whale.Class.extend ({
     splice: Array.prototype.splice,
 
     init: function () {
@@ -586,9 +701,9 @@
     }
   }));
 
-  // ## whale.dom
+  // ## whale.Dom
   // base DOM object which can find and create new nodes
-  var dom = whale.dom = whale.Service ('whale.dom', ['whale.node'], {
+  whale.Dom = whale.Service ('whale.Dom', ['whale.Node'], {
     _matches: {
       '#': 'getElementById',
       '.': 'getElementsByClassName',
@@ -596,21 +711,21 @@
       '=': 'getElementsByTagName'
     },
 
-    construct: function (node) {
-      this.node = node;
+    construct: function (Node) {
+      this.Node = Node;
     },
 
     find: function (s, complex) {
-      // FIXME make similar to whale.node.find
+      // FIXME make similar to whale.Node.find
       complex = complex || /\s/.test (s);
-      if (!complex && this._matches[s[0]]) return new this.node (document[this._matches[s[0]]] (s.slice (1)));
-      return new this.node (document.querySelectorAll (s));
+      if (!complex && this._matches[s[0]]) return new this.Node (document[this._matches[s[0]]] (s.slice (1)));
+      return new this.Node (document.querySelectorAll (s));
     }
   });
 
-  // ## whale.ajax
-  // A service for making AJAX calls, depends on whale.promise
-  var ajax = whale.ajax = whale.Service ('whale.ajax', ['whale.promise'], {
+  // ## whale.Ajax
+  // A service for making AJAX calls, depends on whale.Promise
+  whale.Ajax = whale.Service ('whale.Ajax', ['whale.Promise'], {
     construct: function (Prom) {
       this.Prom = Prom;
       this.req = false;
