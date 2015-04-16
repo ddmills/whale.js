@@ -109,7 +109,7 @@
     return prefix ? prefix + id : id;
   }
 
-  var registered = {};
+  var registered = whale.registered = {};
 
   var get = whale.get = function (key) {
     if (!registered[key]) {
@@ -183,27 +183,30 @@
   // into the constructor.
   // Factory will also register the resulting object as "name" if given.
   // Leave name null if you don't want the object to be registered.
-  var Factory = whale.Factory = function (name, deps, proto) {
-    var obj = inject (deps, Class.extend (proto));
+  var Factory = whale.Factory = function (name, deps, proto, chain) {
+    if (typeof chain == 'string') chain = whale.get(chain);
+    chain = chain || Class;
+    var obj = inject (deps, chain.extend (proto));
     if (name != null) return register (name, obj);
     return obj;
   }
+
 
   // ## Service
   // Similiar to Factory, Service will make a new object based on proto
   // with the array of given dependencies. Service will create a single
   // instance of the new class and register that instance as given name
-  var Service = whale.Service = function (name, deps, proto) {
-    var obj = new (inject (deps, Class.extend (proto)));
+  var Service = whale.Service = function (name, deps, proto, chain) {
+    if (typeof chain == 'string') chain = whale.get(chain);
+    chain = chain || Class;
+    var obj = new (inject (deps, chain.extend (proto)));
     if (name != null) return register (name, obj);
     return obj;
   }
 
-  //
-
   // ## Dispatcher Class
   // The Dispatcher class can trigger events
-  var Dispatcher = whale.Dispatcher = Class.extend ({
+  var _dispatcherProto = {
     // initialize is similiar to the construct method, exept it doesn't
     // need to be called with _super(). It will always run before the
     // construct method. Using initialize will gaurantee that the class
@@ -292,10 +295,12 @@
       }
       return this;
     }
-  });
+  }
+  var Dispatcher = whale.Dispatcher = Class.extend (_dispatcherProto);
+  whale.register('whale.Dispatcher', whale.Dispatcher);
 
   // ## Listener
-  var Listener = whale.Listener = Class.extend ({
+  var _listenerProto = {
     initialize: function () {
       this._listening = {};
     },
@@ -344,7 +349,13 @@
       if (!Object.keys (this._listening[id]).length) delete this._listening[id];
       return this;
     }
-  });
+  }
+  var Listener = whale.Listener = Class.extend (_listenerProto);
+  whale.register('whale.Listener', whale.Dispatcher);
+
+  // ## Events
+  var Events = whale.Events = whale.Dispatcher.extend (_listenerProto);
+  whale.register('whale.Events', whale.Events);
 
   // ## Model
   var Model = whale.Dispatcher.extend ({
@@ -600,7 +611,7 @@
     },
 
     construct: function (s) {
-      if (s.constructor === Array) {
+      if (s instanceof NodeList || Array.isArray(s)) {
         this.elem = s;
       } else if (s && s.nodeType) {
         this.elem = [s];
@@ -611,6 +622,8 @@
         for (var i = div.childNodes.length-1; i >= 0; i--) {
           this.elem[i] = div.childNodes[i];
         }
+      } else {
+        this.elem = [];
       }
     },
 
@@ -636,6 +649,18 @@
 
     addClass: function (c) {
       return this.each (function (e) { e.className += ' ' + c; });
+    },
+
+    hide: function() {
+      return this.each(function(e) {
+        e.style.display = 'none';
+      });
+    },
+
+    show: function() {
+      return this.each(function(e) {
+        e.style.display = 'block';
+      });
     },
 
     each: function (cb) {
@@ -753,11 +778,11 @@
       this.Node = Node;
     },
 
-    find: function (s, complex) {
+    find: function (s) {
       // FIXME make similar to whale.Node.find
-      complex = complex || /\s/.test (s);
-      if (!complex && this._matches[s[0]]) return new this.Node (document[this._matches[s[0]]] (s.slice (1)));
-      return new this.Node (document.querySelectorAll (s));
+      // complex = complex || /\s/.test (s);
+      // if (!complex && this._matches[s[0]]) return new this.Node (document[this._matches[s[0]]] (s.slice (1)));
+      return new whale.Node (document.querySelectorAll (s));
     }
   });
 
