@@ -821,7 +821,6 @@
       return encoded.join ('&').replace (/%20/g, '+');
     },
 
-    // Send a request with a URL
     request: function (params) {
       var p, req, type, body, url;
 
@@ -884,8 +883,6 @@
 
           if (type == 'POST') {
             req.setRequestHeader ('Content-Type', content);
-            req.setRequestHeader ('Content-length', body.length);
-            req.setRequestHeader ('Connection', 'close');
           }
 
           for (var h in headers) {
@@ -896,7 +893,7 @@
 
           req.send (body);
       } else {
-        p.reject('window does not support ActiveXObject or XMLHttpRequest');
+        p.reject('window does not support XMLHttpRequest');
       }
       return p;
     },
