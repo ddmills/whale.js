@@ -785,6 +785,13 @@
       });
     },
 
+    css: function (key, val) {
+      if (undef (val)) return this.elem[0].style[key];
+      return this.each (function (e) {
+        e.style[key] = val;
+      });
+    },
+
     data: function(key, val) {
       return this.attr('data-' + key, val);
     }
