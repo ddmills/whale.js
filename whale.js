@@ -28,13 +28,14 @@
     return typeof obj === 'function';
   }
 
+  var undef = function (obj) {
+    return typeof obj === 'undefined';
+  }
+
   var clone = whale.clone = function (obj) {
     var c, k;
 
-    if (obj === null || typeof obj !== 'object') {
-      return obj;
-    }
-
+    if (obj === null || typeof obj !== 'object') return obj;
     c = obj.constructor();
 
     for (k in obj) {
@@ -50,7 +51,7 @@
   var Class = whale.Class = function () {};
   Class.prototype.initialize = function () {
     // all objects should have a unique id
-    this._id = genId();
+    this._id = genId ();
   },
 
   Class.extend = function (prop) {
@@ -152,8 +153,7 @@
 
   // Register an object with whale
   var register = whale.register = function (key, value) {
-    registered[key] = value;
-    return registered[key];
+    return registered[key] = value;
   }
 
   // Inject array of dependencies into object
@@ -306,7 +306,7 @@
     },
     listen: function (dispatcher, evnt, action, ctx) {
       ctx = ctx || this;
-      if (typeof dispatcher._id == 'undefined') throw 'Given object to listen to is not a Dispatcher';
+      if (undef (dispatcher._id)) throw 'Given object to listen to is not a Dispatcher';
       var id = dispatcher._id;
       this._listening[id] = dispatcher;
       dispatcher.when (evnt, action, ctx);
@@ -370,7 +370,7 @@
 
     url: function () {
       var base = this.collection ? this.urlRoot || this.collection.urlRoot : this.urlRoot;
-      if (!base) throw 'Model does not have a urlRoot or is part of a collection with a urlRoot.';
+      if (! base) throw 'Model does not have a urlRoot or is part of a collection with a urlRoot.';
       if (this.isNew()) return base;
       return base.replace(/([^\/])$/, '$1/') + encodeURIComponent(this.id);
     },
@@ -416,8 +416,9 @@
       this.trigger ('request');
       this.trigger ('save');
 
-      (typeof key === 'object') ? attrs = key : (attrs = {})[key] = val;
-      if (key == null) attrs = this.attrs;
+      typeof key === 'object' ? attrs = key : (attrs = {})[key] = val;
+
+      if (undef (key)) attrs = this.attrs;
       method = this.isNew () ? 'POST' : 'PUT';
       var p = whale.Ajax.request ({
         method: method,
@@ -449,7 +450,7 @@
       if (key == null) return this;
 
       // evil one liner to make source smaller
-      (typeof key === 'object') ? attrs = key : (attrs = {})[key] = val;
+      typeof key === 'object' ? attrs = key : (attrs = {})[key] = val;
 
       // check for presence of ID attribute
       if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
@@ -482,17 +483,19 @@
     construct: function (model, models) {
       if (models) this.set (models);
     },
+
     reset: function () {
       this.length = 0;
       this.models = {};
       this._byId = {};
     },
+
     parse: function (resp) {
       return resp;
     },
+
     set: function (models) {
       models = Array.isArray (models) ? models : [models];
-      console.log (models);
       return this;
     },
   });
@@ -554,8 +557,8 @@
           this._onDone[i][0].apply (this._onDone[i][1], arguments);
         }
         for (var i = 0; i < this._onAlways.length; i++) {
-          var args = Array.prototype.slice.call(arguments);
-          args.unshift(true);
+          var args = Array.prototype.slice.call (arguments);
+          args.unshift (true);
           this._onAlways[i][0].apply (this._onAlways[i][1], args);
         }
       }
@@ -572,8 +575,8 @@
           this._onFail[i][0].apply (this._onFail[i][1], arguments);
         }
         for (var i = 0; i < this._onAlways.length; i++) {
-          var args = Array.prototype.slice.call(arguments);
-          args.unshift(false);
+          var args = Array.prototype.slice.call (arguments);
+          args.unshift (false);
           this._onAlways[i][0].apply (this._onAlways[i][1], args);
         }
       }
@@ -759,14 +762,14 @@
 
     val: function (data) {
       // TODO check type of node (textarea, checkbox, etc)
-      if (typeof data === 'undefined') return this.elem[0].value;
+      if (undef (data)) return this.elem[0].value;
       return this.each (function (e) {
         e.value = data;
       });
     },
 
     attr: function (att, data) {
-      if (typeof data === 'undefined') return this.elem[0].getAttribute (att);
+      if (undef (data)) return this.elem[0].getAttribute (att);
       this.each (function (e) {
         e.setAttribute (att, data);
       });
@@ -916,7 +919,7 @@
 
           req.send (body);
       } else {
-        p.reject('window does not support XMLHttpRequest');
+        p.reject ('window does not support XMLHttpRequest');
       }
       return p;
     },
@@ -985,9 +988,9 @@
   }
 
   whale.util.escape = function (text) {
-      return String(text).replace(/[&<>"'\/]/g, function (s) {
-        return entityMap[s];
-      });
+    return String(text).replace(/[&<>"'\/]/g, function (s) {
+      return entityMap[s];
+    });
   },
 
   whale.util.template = function (text) {
@@ -1014,10 +1017,10 @@
       "print=function(){__p+=__j.call(arguments,'');};\n" +
       source + 'return __p;\n';
 
-    var render = new Function('obj', 'whale', source);
+    var render = new Function ('obj', 'whale', source);
 
     var template = function (data) {
-      return render.call(this, data, whale);
+      return render.call (this, data, whale);
     };
 
     template.source = 'function(obj){\n' + source + '}';
