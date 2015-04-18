@@ -306,6 +306,7 @@
     },
     listen: function (dispatcher, evnt, action, ctx) {
       ctx = ctx || this;
+      if (typeof dispatcher._id == 'undefined') throw 'Given object to listen to is not a Dispatcher';
       var id = dispatcher._id;
       this._listening[id] = dispatcher;
       dispatcher.when (evnt, action, ctx);
@@ -699,7 +700,9 @@
           });
         });
       }
-      return e.insertAdjacentHTML ('beforeend', snippet);
+      return this.each (function (e) {
+        e.insertAdjacentHTML ('beforeend', snippet);
+      });
     },
 
     prepend: function (snippet) {
@@ -710,13 +713,15 @@
           });
         });
       }
-      return e.insertAdjacentHTML ('afterbegin', snippet);
+      return this.each (function (e) {
+        e.insertAdjacentHTML ('afterbegin', snippet);
+      });
     },
 
     before: function (snippet) {
       if (snippet instanceof this.constructor) {
         return this.each (function (e) {
-          snippet.each (function(e2) {
+          snippet.each (function (e2) {
             // e.parentNode.insertBefore(e2, e.nextSibling);
             e.parentNode.insertBefore (e2, e);
           });
@@ -753,14 +758,32 @@
     },
 
     val: function (data) {
-      // TODO check type of node
-      if (data) {
-        this.each (function () {
-          this.value = data;
-        });
-      } else {
-        return this.elem[0].value;
-      }
+      // TODO check type of node (textarea, checkbox, etc)
+      if (typeof data === 'undefined') return this.elem[0].value;
+      return this.each (function (e) {
+        e.value = data;
+      });
+    },
+
+    attr: function (att, data) {
+      if (typeof data === 'undefined') return this.elem[0].getAttribute (att);
+      this.each (function (e) {
+        e.setAttribute (att, data);
+      });
+    },
+
+    hasAttr: function (att) {
+      return this.elem[0].hasAttribute(att);
+    },
+
+    removeAttr: function (att) {
+      return this.each (function (e) {
+        e.removeAttribute(att);
+      });
+    },
+
+    data: function(key, val) {
+      return this.attr('data-' + key, val);
     }
   }));
 
