@@ -352,7 +352,7 @@
     }
   }
   var Listener = whale.Listener = Class.extend (_listenerProto);
-  whale.register('whale.Listener', whale.Dispatcher);
+  whale.register('whale.Listener', whale.Listener);
 
   // ## Events
   var Events = whale.Events = whale.Dispatcher.extend (_listenerProto);
