@@ -182,11 +182,18 @@
   // It will build the class and insert the array of dependencies
   // into the constructor.
   // Factory will also register the resulting object as "name" if given.
-  // Leave name null if you don't want the object to be registered.
-  var Factory = whale.Factory = function (name, deps, proto, chain) {
-    if (typeof chain == 'string') chain = whale.get(chain);
-    chain = chain || Class;
-    var obj = inject (deps, chain.extend (proto));
+  // Set name null if you don't want the object to be registered.
+  var Factory = whale.Factory = function (name, deps, proto) {
+    var obj = Class;
+    var args = Array.prototype.slice.call (arguments, 3);
+
+    for (var indx in args) {
+      var chain = args[indx];
+      if (typeof chain == 'string') chain = whale.get(chain);
+      obj = chain.extend (obj.prototype);
+    }
+
+    obj = inject (deps,  obj.extend(proto));
     if (name != null) return register (name, obj);
     return obj;
   }
@@ -196,10 +203,17 @@
   // Similiar to Factory, Service will make a new object based on proto
   // with the array of given dependencies. Service will create a single
   // instance of the new class and register that instance as given name
-  var Service = whale.Service = function (name, deps, proto, chain) {
-    if (typeof chain == 'string') chain = whale.get(chain);
-    chain = chain || Class;
-    var obj = new (inject (deps, chain.extend (proto)));
+  var Service = whale.Service = function (name, deps, proto) {
+    var obj = Class;
+    var args = Array.prototype.slice.call (arguments, 3);
+
+    for (var indx in args) {
+      var chain = args[indx];
+      if (typeof chain == 'string') chain = whale.get(chain);
+      obj = chain.extend (obj.prototype);
+    }
+
+    var obj = new (inject (deps, obj.extend (proto)));
     if (name != null) return register (name, obj);
     return obj;
   }
